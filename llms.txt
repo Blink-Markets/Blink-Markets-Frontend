@@ -1,0 +1,500 @@
+# LI.FI
+
+> LI.FI is the leading multi-chain liquidity aggregation platform that powers seamless cross-chain payments, swaps, and bridging. One integration provides access to 27 bridges, 31 exchanges, and intent-based solvers across 58 blockchains (EVM, Solana, Bitcoin, SUI).
+
+---
+
+## Canonical Page List (Priority Order)
+
+For AI agents, read these pages in order of relevance:
+
+1. **Agent Integration** - https://docs.li.fi/agents/overview - Start here for AI agent integration
+2. **Concepts & Objects** - https://docs.li.fi/agents/concepts - Core object definitions
+3. **Get Quote API** - https://docs.li.fi/api-reference/get-a-quote-for-a-token-transfer - Primary endpoint
+4. **Check Status API** - https://docs.li.fi/api-reference/check-the-status-of-a-cross-chain-transfer - Track transfers
+5. **Error Codes** - https://docs.li.fi/api-reference/error-codes - Handle errors
+6. **Status Tracking** - https://docs.li.fi/introduction/user-flows-and-examples/status-tracking - Status flow details
+7. **Chains API** - https://docs.li.fi/api-reference/get-information-about-all-currently-supported-chains - List chains
+8. **Tokens API** - https://docs.li.fi/api-reference/fetch-all-known-tokens - List tokens
+9. **Tools API** - https://docs.li.fi/api-reference/get-available-bridges-and-exchanges - List bridges/DEXs
+
+---
+
+## Minimal Endpoint Set for Agents
+
+Base URL: `https://li.quest/v1`
+
+### 1. GET /quote - Get transfer quote (MOST IMPORTANT)
+```
+GET /v1/quote?fromChain=1&toChain=42161&fromToken=USDC&toToken=USDC&fromAmount=1000000&fromAddress=0x...
+```
+Returns: Quote with `transactionRequest` ready for signing
+
+### 2. GET /status - Check transfer status
+```
+GET /v1/status?txHash=0x...&bridge=stargate&fromChain=1&toChain=42161
+```
+Returns: Status (NOT_FOUND, PENDING, DONE, FAILED) with substatus
+
+### 3. GET /chains - List supported chains
+```
+GET /v1/chains?chainTypes=EVM
+```
+Returns: Array of {id, key, name, chainType}
+
+### 4. GET /tokens - List supported tokens
+```
+GET /v1/tokens?chains=1,42161
+```
+Returns: Map of chainId to token arrays
+
+### 5. GET /tools - List bridges and DEXs
+```
+GET /v1/tools
+```
+Returns: {bridges: [...], exchanges: [...]}
+
+---
+
+## Decision Rules for Agents
+
+### When to use each endpoint:
+- **Simple transfer**: Use `/quote` directly - returns best route with tx data
+- **Compare options**: Use `/advanced/routes` - returns multiple routes
+- **Track progress**: Poll `/status` every 10-30 seconds until DONE or FAILED
+
+### Status handling:
+```
+PENDING → Keep polling
+DONE + COMPLETED → Success, exact tokens received
+DONE + PARTIAL → Success, but different token received (still full value)
+DONE + REFUNDED → Failed but user got funds back
+FAILED → Check error, may need user action
+```
+
+### Error recovery:
+- 429 (Rate limit): Exponential backoff, retry
+- No route found: Try different tokens or smaller amount
+- Slippage error: Increase slippage parameter (default 0.005)
+
+### Common chain IDs:
+- Ethereum: 1
+- Arbitrum: 42161
+- Optimism: 10
+- Base: 8453
+- Polygon: 137
+- BSC: 56
+
+---
+
+## Overview
+
+LI.FI solves the multi-chain payment challenge by providing:
+- **Universal liquidity access** across all major blockchains
+- **Smart routing** that finds the cheapest and fastest path for any transfer
+- **One integration** that replaces dozens of chain-specific builds
+- **Redundant routing** with automatic fallbacks for reliability
+
+### Pain Points Solved
+
+| Problem | Without LI.FI | With LI.FI |
+|---------|---------------|------------|
+| Cross-chain payments | Complex manual bridging | Single payment flow across all chains |
+| Token inconsistencies | Confusion & failed transactions | Canonical mapping ensures smooth payments |
+| Multiple APIs to maintain | Slow and costly | Unified API/SDK handles all chains |
+| Failed or stuck transfers | Bad UX & support tickets | Smart fallback = payment always succeeds |
+
+---
+
+## Products
+
+### 1. LI.FI API
+
+The core REST API for cross-chain and same-chain operations.
+
+- **Base URL**: `https://li.quest`
+- **Staging URL**: `https://staging.li.quest`
+- **OpenAPI Spec**: https://raw.githubusercontent.com/lifinance/public-docs/main/openapi.yaml
+- **AI Plugin**: https://docs.li.fi/.well-known/ai-plugin.json
+
+#### Key Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/v1/quote` | GET | Get a quote for cross-chain or same-chain swaps |
+| `/v1/quote/contractCalls` | POST | Get a quote with custom contract calls on destination |
+| `/v1/advanced/routes` | POST | Get multiple route options for a transfer |
+| `/v1/advanced/stepTransaction` | GET | Get transaction data for a specific route step |
+| `/v1/status` | GET | Check transaction status |
+| `/v1/tokens` | GET | List all supported tokens |
+| `/v1/token` | GET | Get specific token information |
+| `/v1/chains` | GET | List all supported chains |
+| `/v1/tools` | GET | List available bridges and exchanges |
+| `/v1/connections` | GET | Get possible token transfer connections |
+| `/v1/gas/prices` | GET | Get gas prices for all chains |
+| `/v1/gas/suggestion` | GET | Get gas suggestion for a specific chain |
+
+#### Example: Get a Cross-Chain Quote
+
+```
+GET https://li.quest/v1/quote?fromChain=1&toChain=42161&fromToken=USDC&toToken=USDC&fromAmount=100000000&fromAddress=0x...
+```
+
+Returns:
+- Estimated output amount
+- Route details (bridge/DEX used)
+- Transaction calldata ready to execute
+- Gas estimates
+- Minimum amount received (slippage protected)
+
+### 2. LI.FI SDK (JavaScript/TypeScript)
+
+Full-featured SDK for frontend and backend environments.
+
+- **NPM Package**: `@lifi/sdk`
+- **Documentation**: https://docs.li.fi/sdk/overview
+
+#### Features
+
+- All ecosystems, chains, bridges, exchanges, and solvers supported
+- Full cycle from routes/quotes to transaction execution
+- Event and hooks handling for execution tracking
+- Customizable settings (RPCs, allowed chains, tokens, bridges)
+- EIP-7702, EIP-5792, ERC-2612, EIP-712, Permit2 support
+- Tree-shaking and dead-code elimination for minimal bundle size
+- Arbitrary contract calls on destination chain
+- Viem, Wallet Standard, Bigmi compatibility
+
+#### Installation
+
+```bash
+npm install @lifi/sdk
+# or
+yarn add @lifi/sdk
+# or
+pnpm add @lifi/sdk
+```
+
+#### Quick Start
+
+```typescript
+import { createConfig, getQuote, executeRoute } from "@lifi/sdk";
+
+createConfig({ integrator: "YourAppName" });
+
+const quote = await getQuote({
+  fromChain: 1,
+  toChain: 42161,
+  fromToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC on Ethereum
+  toToken: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", // USDC on Arbitrum
+  fromAmount: "100000000",
+  fromAddress: "0x...",
+});
+
+await executeRoute(quote, { updateRouteHook: (route) => console.log(route) });
+```
+
+### 3. LI.FI Widget
+
+Embeddable UI components for cross-chain swapping and bridging.
+
+- **NPM Package**: `@lifi/widget`
+- **Playground**: https://playground.li.fi
+- **Documentation**: https://docs.li.fi/widget/overview
+
+#### Features
+
+- Embeddable variants: compact, wide, drawer
+- Pre-configured themes with dark mode
+- Customizable chains, tokens, bridges, exchanges
+- Transaction progress and history views
+- Wallet lists and bookmarks
+- Complete UI translations
+- Compatible with React, Next.js, Vue, Nuxt, Svelte, Remix, Gatsby, Vite
+
+#### Installation
+
+```bash
+npm install @lifi/widget
+```
+
+### 4. LI.FI Intent / Solver Marketplace
+
+Intent-based execution where solvers compete to fulfill cross-chain transfers.
+
+- **Documentation**: https://docs.li.fi/lifi-intents/introduction
+- **Foundation**: Official foundation of the Open Intents Framework (OIF)
+
+#### How It Works
+
+1. **User expresses intent**: Deposits tokens into a resource lock
+2. **Intent distributed**: Lock generates proof, broadcast to order server
+3. **Solvers compete**: Network of solvers submit competitive quotes
+4. **Execution**: Winning solver delivers assets on destination chain
+5. **Settlement**: Delivery verified, locked funds released to solver
+
+#### Currently Supported
+
+- **Chains**: Ethereum, Arbitrum, Base
+- **Same-chain pairs**: USDC-ETH, USDT-ETH
+- **Cross-chain pairs**: USDC-USDC, USDT-USDT, ETH-ETH
+
+#### Key Concepts
+
+- **Intents**: User requests expressing desired outcome without specifying how
+- **Solvers**: Entities competing to fill orders using their own capital
+- **Resource Locks**: Smart contracts that securely escrow user funds
+- **Order Server**: Marketplace matching intents with solvers
+- **Output Settler**: Records delivery on destination chain
+- **Oracle**: Transmits proof of delivery to source chain
+- **Input Settler**: Verifies proofs and releases funds
+
+---
+
+## LI.FI Composer (Zaps)
+
+Composer enables one-click execution of multiple on-chain actions across chains.
+
+- **Also known as**: Contract calls, Zaps, Transaction orchestration
+- **Documentation**: https://docs.li.fi/introduction/user-flows-and-examples/lifi-composer
+
+### What Composer Does
+
+Transform multi-step, multi-chain operations into a single transaction:
+
+**Traditional Flow** (4+ transactions, 2+ websites):
+1. Bridge ETH from Ethereum to Base
+2. Swap ETH to USDC on Base
+3. Approve USDC for Morpho
+4. Deposit into Morpho vault
+
+**Composer Flow** (1 transaction, 1 click):
+- All of the above in a single atomic operation
+
+### Key Benefits
+
+- **Single Transaction**: Multiple actions in one tx, one signature
+- **Cost Efficiency**: Reduced gas by batching
+- **Atomic Execution**: All-or-nothing on same-chain operations
+- **Pre-execution Simulation**: Certainty about outcomes before signing
+
+### Supported Actions
+
+- **Swapping tokens** via DEXs
+- **Depositing into vaults** (lending, yield)
+- **Staking** (LSTs, restaking protocols)
+- **Cross-chain protocol access**
+
+### Supported Protocols
+
+1. Morpho V1 and V2 vaults
+2. Aave V3 markets
+3. Kinetiq (deposit only)
+4. Euler
+5. Ethena (USDe/sUSDe, ENA/sENA - deposit only)
+6. Felix Vanilla
+7. HyperLend
+8. Pendle
+9. Maple (deposit only)
+
+### Example: Deposit USDC into Morpho Vault
+
+```bash
+curl -X GET 'https://li.quest/v1/quote?fromChain=8453&toChain=8453&fromToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&toToken=0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A&fromAddress=0x...&fromAmount=1000000'
+```
+
+The `toToken` is the Morpho vault token address. Composer automatically handles the deposit.
+
+---
+
+## Supported Ecosystems
+
+### Blockchains (35+)
+
+**EVM Chains**:
+- Ethereum, Arbitrum, Optimism, Base, Polygon, Avalanche, BSC, Fantom, Gnosis
+- zkSync Era, Polygon zkEVM, Linea, Scroll, Mantle, Mode, Blast
+- Celo, Aurora, Moonbeam, Moonriver, Metis, Boba, Fuse
+- And many more...
+
+**Non-EVM**:
+- **Solana**: Full support for SPL tokens and Solana programs
+- **Bitcoin**: Native BTC swaps and bridging
+- **SUI**: Move-based chain support
+
+### Bridges Aggregated
+
+Stargate, Across, Hop, Celer cBridge, Multichain, Connext, Synapse, Hyphen, Allbridge, Wormhole, LayerZero, Axelar, deBridge, Symbiosis, Router Protocol, Orbiter, Relay, and more.
+
+### DEX Aggregators
+
+1inch, 0x, Paraswap, KyberSwap, OpenOcean, DODO, Odos, Jupiter (Solana), and more.
+
+### Solvers
+
+LI.FI Solver, Enso, Propeller Heads, Bungee, and growing network.
+
+---
+
+## Architecture
+
+### System Components
+
+1. **dApp Interface**: User-facing applications integrate LI.FI API/SDK
+2. **LI.FI API**: Off-chain aggregation and smart order routing
+3. **LI.FI Diamond Contract**: On-chain entry point using diamond pattern (EIP-2535)
+4. **Facet Contracts**: Modular contracts for bridges, DEXs, solvers
+5. **Bridge/DEX/Solver Contracts**: Final execution on respective protocols
+
+### Order Flow
+
+1. User requests quote from dApp
+2. LI.FI API queries bridges, DEXs, solvers for pricing
+3. Optimal route returned to dApp
+4. User approves and signs transaction
+5. Diamond contract routes to appropriate facet
+6. Facet executes via underlying protocol
+7. Assets delivered to user
+
+### Smart Contracts
+
+- **Diamond Pattern**: Upgradeable, modular architecture
+- **Facets**: Separate contracts for each bridge/DEX integration
+- **Executor**: Handles complex multi-step transactions
+- **Receiver**: Manages incoming cross-chain transfers
+
+Contract addresses: https://docs.li.fi/introduction/lifi-architecture/smart-contract-addresses
+
+---
+
+## Integration Guides
+
+### Getting Started
+
+1. **API Introduction**: https://docs.li.fi/api-reference/introduction
+2. **SDK Installation**: https://docs.li.fi/sdk/installing-the-sdk
+3. **Widget Setup**: https://docs.li.fi/widget/install-widget
+
+### Common Flows
+
+- **Request a Quote**: https://docs.li.fi/api-reference/get-a-quote-for-a-token-transfer
+- **Execute a Swap**: https://docs.li.fi/sdk/execute-routes
+- **Track Status**: https://docs.li.fi/api-reference/check-the-status-of-a-cross-chain-transfer
+- **Handle Errors**: https://docs.li.fi/api-reference/error-codes
+
+### Advanced Topics
+
+- **Contract Calls (Zaps)**: https://docs.li.fi/introduction/user-flows-and-examples/lifi-composer
+- **Solana Integration**: https://docs.li.fi/introduction/lifi-architecture/solana-overview
+- **Bitcoin Integration**: https://docs.li.fi/introduction/lifi-architecture/bitcoin-overview
+- **Intents/Solvers**: https://docs.li.fi/lifi-intents/introduction
+
+### Monetization
+
+Integrators can charge fees on transactions:
+- **Documentation**: https://docs.li.fi/introduction/integrating-lifi/monetizing-integration
+- **Fee Collection**: Fees taken from source token
+- **Withdrawal**: Direct withdrawal or LI.FI consolidation service
+
+---
+
+## Key Concepts
+
+### Quote vs Route
+
+- **Quote**: Single optimized route with ready-to-execute transaction data
+- **Route**: Path from source to destination, may require additional step data
+
+### Steps and Actions
+
+- **Step**: Individual operation in a route (swap, bridge, or combined)
+- **Action**: Specific operation type within a step
+
+### Slippage
+
+- **Auto slippage**: LI.FI picks suitable buffer by asset liquidity
+- **Default**: ~0.5% with minimum slightly below estimate
+- **Minimum received**: Enforced on-chain, reverts if not met
+
+### Transaction Types
+
+- **Same-chain swap**: Atomic, reverts entirely on failure
+- **Cross-chain**: Bridge can succeed while destination swap fails
+- **Partial completion**: User refunded in bridged asset on destination
+
+---
+
+## Rate Limits
+
+- **Default**: 10 requests/second per IP
+- **With API Key**: Higher limits available
+- **Request Key**: https://docs.li.fi/api-reference/rate-limits
+
+---
+
+## Security
+
+- **Audited**: Multiple security audits by leading firms
+- **Non-custodial**: Users maintain control of funds
+- **Transparent**: Open-source smart contracts
+- **Details**: https://docs.li.fi/introduction/learn-more/security-and-audits
+
+---
+
+## Use Cases
+
+1. **Cross-chain payments**: Accept payments in any token on any chain
+2. **DEX aggregation**: Best swap rates across all DEXs
+3. **Bridge aggregation**: Optimal cross-chain transfers
+4. **DeFi zaps**: One-click deposits into any protocol
+5. **Gas abstraction**: Pay gas in any token
+6. **Intent execution**: Competitive solver marketplace
+7. **Portfolio rebalancing**: Move assets across chains efficiently
+8. **NFT purchases**: Cross-chain NFT buying
+9. **Wallet integration**: Embedded swap/bridge functionality
+
+---
+
+## Resources
+
+### Documentation
+
+- **Main Docs**: https://docs.li.fi
+- **API Reference**: https://docs.li.fi/api-reference
+- **SDK Guide**: https://docs.li.fi/sdk/overview
+- **Widget Guide**: https://docs.li.fi/widget/overview
+- **Intents**: https://docs.li.fi/lifi-intents/introduction
+- **FAQs**: https://docs.li.fi/guides/fees-monetization/faq
+
+### NPM Packages
+
+- **SDK**: https://www.npmjs.com/package/@lifi/sdk
+- **Widget**: https://www.npmjs.com/package/@lifi/widget
+- **Types**: https://www.npmjs.com/package/@lifi/types
+
+### Tools
+
+- **Widget Playground**: https://playground.li.fi
+- **Transaction Explorer**: https://explorer.li.fi
+
+### Support
+
+- **Website**: https://li.fi
+- **Discord**: https://discord.gg/lifi
+- **Twitter**: https://twitter.com/lifiprotocol
+- **Email**: support@li.fi
+- **Help Center**: https://lifihelp.zendesk.com
+
+### Legal
+
+- **Terms**: https://li.fi/legal/terms-and-conditions/
+- **Privacy**: https://li.fi/legal/privacy-policy/
+
+---
+
+## Changelog
+
+Track updates to LI.FI products:
+- **Backend**: https://docs.li.fi/changelog/backend
+- **SDK**: https://docs.li.fi/changelog/sdk
+- **Widget**: https://docs.li.fi/changelog/widget

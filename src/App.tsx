@@ -4,12 +4,20 @@ import { StatsBar } from "./components/StatsBar";
 import { FlashBetCard } from "./components/FlashBetCard";
 import { CategoryTabs } from "./components/CategoryTabs";
 import { RecentBets } from "./components/RecentBets";
+import { BridgeModal, BridgeButton, useBridgeModal } from "./components/BridgeModal";
+import { ZKLoginButton } from "./components/ZKLoginButton";
 import { useFlashBets } from "./hooks/useFlashBets";
-import { Zap, History, Sparkles, ArrowRight } from "lucide-react";
+import { useZKLogin } from "./hooks/useZKLogin";
+import { Zap, History, Sparkles, ArrowRight, ExternalLink } from "lucide-react";
 import { BetCategory } from "./types/bet";
 
 function App() {
   const account = useCurrentAccount();
+  const bridgeModal = useBridgeModal();
+  const zkLogin = useZKLogin();
+
+  // User is connected if either wallet or zkLogin is active
+  const isUserConnected = !!account || zkLogin.isAuthenticated;
   const {
     activeBets,
     allActiveBets,
@@ -31,39 +39,72 @@ function App() {
   }, {} as Record<BetCategory, number>);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative overflow-hidden" style={{ background: '#050B15' }}>
+      {/* Sui-style Background Glow Effects */}
+      <div className="sui-bg-glow sui-bg-glow-1" />
+      <div className="sui-bg-glow sui-bg-glow-2" />
+      <div className="sui-bg-glow sui-bg-glow-3" />
+
+      {/* Noise texture overlay */}
+      <div className="noise-overlay" />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border/50 glass-darker">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <header className="sticky top-0 z-50 glass-darker">
+        <div className="container mx-auto flex h-18 items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-success flex items-center justify-center">
-              <Zap size={20} className="text-white" fill="currentColor" />
+            <div className="relative group">
+              <div
+                className="absolute inset-0 rounded-xl blur-lg opacity-60"
+                style={{ background: 'linear-gradient(135deg, #4DA2FF, #00D4FF)' }}
+              />
+              <div
+                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
+                style={{ background: 'linear-gradient(135deg, #4DA2FF, #00D4FF, #00E5A0)' }}
+              >
+                <Zap size={22} className="text-white" fill="currentColor" />
+              </div>
             </div>
             <span className="font-display text-xl font-bold">
-              <span className="gradient-text">Blink</span>
+              <span className="gradient-text-animated">Blink</span>
               <span className="text-foreground">Market</span>
             </span>
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Bridge Button */}
+            <BridgeButton onClick={bridgeModal.open} className="hidden sm:flex" />
+
             <a
               href="#how-it-works"
-              className="hidden md:flex items-center gap-1.5 text-sm text-foreground-secondary hover:text-foreground transition-colors"
+              className="hidden md:flex items-center gap-1.5 text-sm text-foreground-secondary hover:text-[#4DA2FF] transition-colors duration-200"
             >
               How it works
               <ArrowRight size={14} />
             </a>
-            <ConnectButton />
+
+            {/* ZKLogin + Wallet Connect */}
+            <ZKLoginButton
+              onConnectWallet={() => {
+                // Trigger dapp-kit connect modal
+                const connectBtn = document.querySelector('[data-dapp-kit-connect-button]') as HTMLButtonElement;
+                connectBtn?.click();
+              }}
+            />
+
+            {/* Hidden connect button for programmatic access */}
+            <div className="hidden">
+              <ConnectButton />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         {/* Hero Section */}
         <Hero />
 
         {/* Stats Bar */}
-        <div className="mb-8">
+        <div className="mb-10">
           <StatsBar
             activeBets={allActiveBets.length}
             totalVolume={totalVolume}
@@ -72,7 +113,7 @@ function App() {
         </div>
 
         {/* Category Filters */}
-        <div className="mb-6">
+        <div className="mb-8">
           <CategoryTabs
             selected={selectedCategory}
             onSelect={setSelectedCategory}
@@ -84,39 +125,68 @@ function App() {
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Active Bets - 3 columns on xl screens */}
           <div className="xl:col-span-3">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-2.5">
                 <div className="live-dot" />
                 <h2 className="text-xl font-bold text-foreground">Live Markets</h2>
               </div>
               {activeBets.length > 0 && (
-                <span className="px-2 py-0.5 rounded-md bg-success-bg text-success text-xs font-semibold">
+                <span
+                  className="px-2.5 py-1 rounded-lg text-xs font-bold"
+                  style={{
+                    background: 'rgba(0, 229, 160, 0.12)',
+                    color: '#00E5A0',
+                    border: '1px solid rgba(0, 229, 160, 0.25)'
+                  }}
+                >
                   {activeBets.length} active
                 </span>
               )}
             </div>
 
             {activeBets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 rounded-2xl border border-dashed border-border bg-card/30">
-                <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-4">
-                  <Sparkles className="text-muted-foreground" size={28} />
+              <div
+                className="flex flex-col items-center justify-center py-24 rounded-2xl"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(13, 27, 42, 0.6) 0%, rgba(15, 31, 56, 0.4) 100%)',
+                  border: '1px dashed rgba(77, 162, 255, 0.2)'
+                }}
+              >
+                <div
+                  className="relative w-18 h-18 rounded-2xl flex items-center justify-center mb-5"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(77, 162, 255, 0.1), rgba(0, 212, 255, 0.08))',
+                    width: '72px',
+                    height: '72px'
+                  }}
+                >
+                  <Sparkles className="text-[#4DA2FF]" size={32} />
+                  <div
+                    className="absolute inset-0 rounded-2xl blur-xl opacity-40"
+                    style={{ background: 'rgba(77, 162, 255, 0.3)' }}
+                  />
                 </div>
-                <p className="text-lg font-medium text-foreground-secondary mb-2">
+                <p className="text-lg font-semibold text-foreground-secondary mb-2">
                   {selectedCategory === 'All' ? 'Waiting for markets...' : `No ${selectedCategory} markets`}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-foreground-tertiary">
                   New flash markets open every few seconds
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activeBets.map((bet) => (
-                  <FlashBetCard
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {activeBets.map((bet, index) => (
+                  <div
                     key={bet.id}
-                    bet={bet}
-                    onPlaceBet={placeBet}
-                    isConnected={!!account}
-                  />
+                    className="card-entrance"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    <FlashBetCard
+                      bet={bet}
+                      onPlaceBet={placeBet}
+                      isConnected={isUserConnected}
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -125,12 +195,18 @@ function App() {
           {/* Recent Results Sidebar */}
           <div className="xl:col-span-1">
             <div className="xl:sticky xl:top-24">
-              <div className="flex items-center gap-2 mb-4">
-                <History size={20} className="text-muted-foreground" />
+              <div className="flex items-center gap-2.5 mb-5">
+                <History size={20} className="text-[#4DA2FF]" />
                 <h2 className="text-lg font-bold text-foreground">Recent Results</h2>
               </div>
 
-              <div className="rounded-2xl border border-border/50 bg-card/30 p-4 max-h-[600px] overflow-y-auto">
+              <div
+                className="rounded-2xl p-4 max-h-[640px] overflow-y-auto"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(13, 27, 42, 0.7) 0%, rgba(15, 31, 56, 0.5) 100%)',
+                  border: '1px solid rgba(77, 162, 255, 0.1)'
+                }}
+              >
                 <RecentBets bets={recentBets} />
               </div>
             </div>
@@ -138,98 +214,202 @@ function App() {
         </div>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="mt-20 py-16 scroll-mt-20">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-3">How It Works</h2>
-            <p className="text-foreground-secondary max-w-xl mx-auto">
+        <section id="how-it-works" className="mt-24 py-20 scroll-mt-20">
+          <div className="text-center mb-14">
+            <div
+              className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full"
+              style={{
+                background: 'rgba(77, 162, 255, 0.08)',
+                border: '1px solid rgba(77, 162, 255, 0.2)'
+              }}
+            >
+              <Sparkles size={14} className="text-[#4DA2FF]" />
+              <span className="text-sm font-medium text-[#4DA2FF]">Simple & Fast</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4 font-display">
+              How It Works
+            </h2>
+            <p className="text-lg text-foreground-secondary max-w-xl mx-auto">
               Flash betting made simple. Three steps to place your prediction.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {[
               {
                 step: '01',
                 title: 'Pick Your Side',
                 description: 'Choose your prediction for the next live event moment. Will it be Team A or Team B?',
                 icon: '🎯',
-                gradient: 'from-success/20 to-primary/20',
+                gradient: 'from-[#00E5A0]/15 to-[#00D4FF]/10',
+                borderColor: 'rgba(0, 229, 160, 0.2)',
+                stepGradient: 'linear-gradient(135deg, #00E5A0, #00D4FF)',
               },
               {
                 step: '02',
                 title: 'Bet Fast',
                 description: 'You have ~10 seconds before the market closes. Select your amount and confirm instantly.',
                 icon: '⚡',
-                gradient: 'from-warning/20 to-orange-500/20',
+                gradient: 'from-[#4DA2FF]/15 to-[#00D4FF]/10',
+                borderColor: 'rgba(77, 162, 255, 0.2)',
+                stepGradient: 'linear-gradient(135deg, #4DA2FF, #00D4FF)',
               },
               {
                 step: '03',
                 title: 'Win Instantly',
                 description: 'Results are determined immediately. Winnings are paid out automatically to your wallet.',
                 icon: '💰',
-                gradient: 'from-info/20 to-purple-500/20',
+                gradient: 'from-[#FFB84D]/15 to-[#FFC870]/10',
+                borderColor: 'rgba(255, 184, 77, 0.2)',
+                stepGradient: 'linear-gradient(135deg, #FFB84D, #FFC870)',
               },
             ].map((item) => (
               <div
                 key={item.step}
-                className="relative group p-6 rounded-2xl bg-card border border-border transition-all hover:border-border-hover hover:bg-card-hover"
+                className="relative group p-7 rounded-2xl transition-all duration-300 hover:translate-y-[-4px]"
+                style={{
+                  background: `linear-gradient(135deg, rgba(13, 27, 42, 0.9) 0%, rgba(15, 31, 56, 0.7) 100%)`,
+                  border: `1px solid ${item.borderColor}`,
+                }}
               >
+                {/* Animated top border */}
+                <div
+                  className="absolute top-0 left-0 right-0 h-[2px] rounded-t-2xl opacity-60"
+                  style={{ background: item.stepGradient }}
+                />
+
                 {/* Step number */}
-                <div className="absolute -top-3 -left-3 w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-success flex items-center justify-center text-xs font-bold text-white shadow-lg">
+                <div
+                  className="absolute -top-4 -left-4 w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold text-white shadow-lg"
+                  style={{
+                    background: item.stepGradient,
+                    boxShadow: `0 8px 24px ${item.borderColor}`
+                  }}
+                >
                   {item.step}
                 </div>
 
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center text-2xl mb-4`}>
+                <div
+                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} flex items-center justify-center text-3xl mb-5`}
+                  style={{ border: `1px solid ${item.borderColor}` }}
+                >
                   {item.icon}
                 </div>
 
-                <h3 className="text-lg font-bold text-foreground mb-2">{item.title}</h3>
+                <h3 className="text-xl font-bold text-foreground mb-3">{item.title}</h3>
                 <p className="text-sm text-foreground-tertiary leading-relaxed">{item.description}</p>
+
+                {/* Hover glow */}
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at 50% 0%, ${item.borderColor}, transparent 60%)`
+                  }}
+                />
               </div>
             ))}
           </div>
         </section>
 
         {/* CTA Section */}
-        <section className="mt-12 mb-8 py-12 px-8 rounded-3xl bg-gradient-to-br from-primary/10 via-info/5 to-purple-500/10 border border-primary/20">
-          <div className="text-center max-w-2xl mx-auto">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
+        <section className="mt-16 mb-10 py-16 px-10 rounded-3xl relative overflow-hidden">
+          {/* Background */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: 'linear-gradient(135deg, rgba(77, 162, 255, 0.08) 0%, rgba(0, 212, 255, 0.05) 50%, rgba(0, 229, 160, 0.08) 100%)',
+              border: '1px solid rgba(77, 162, 255, 0.15)'
+            }}
+          />
+
+          {/* Animated glow orbs */}
+          <div
+            className="absolute -top-20 -right-20 w-64 h-64 rounded-full blur-3xl opacity-30 pointer-events-none"
+            style={{
+              background: 'rgba(77, 162, 255, 0.4)',
+              animation: 'blob 15s ease-in-out infinite'
+            }}
+          />
+          <div
+            className="absolute -bottom-20 -left-20 w-48 h-48 rounded-full blur-3xl opacity-25 pointer-events-none"
+            style={{
+              background: 'rgba(0, 229, 160, 0.4)',
+              animation: 'blob 20s ease-in-out infinite reverse'
+            }}
+          />
+
+          <div className="text-center max-w-2xl mx-auto relative z-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-5 font-display">
               Ready to make your first flash bet?
             </h2>
-            <p className="text-foreground-secondary mb-6">
+            <p className="text-lg text-foreground-secondary mb-8">
               Connect your Sui wallet and start betting on live events with sub-second finality.
             </p>
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4">
               <ConnectButton />
+              <a
+                href="#"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:translate-y-[-2px]"
+                style={{
+                  background: 'rgba(77, 162, 255, 0.1)',
+                  border: '1px solid rgba(77, 162, 255, 0.3)',
+                  color: '#4DA2FF'
+                }}
+              >
+                Learn More
+                <ExternalLink size={16} />
+              </a>
             </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 mt-8">
+      <footer
+        className="py-10 mt-8 relative z-10"
+        style={{ borderTop: '1px solid rgba(77, 162, 255, 0.1)' }}
+      >
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-success flex items-center justify-center">
-                <Zap size={12} className="text-white" fill="currentColor" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #4DA2FF, #00D4FF)' }}
+              >
+                <Zap size={14} className="text-white" fill="currentColor" />
               </div>
               <span className="font-display font-semibold text-foreground-secondary">
                 BlinkMarket
               </span>
             </div>
-            <p className="text-sm text-muted-foreground text-center">
-              Built on Sui · Powered by Flash Transactions · Bet Responsibly
+
+            <p className="text-sm text-foreground-tertiary text-center flex items-center gap-2">
+              Built on{' '}
+              <span
+                className="font-semibold"
+                style={{
+                  background: 'linear-gradient(90deg, #4DA2FF, #00D4FF)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                Sui
+              </span>
+              · Powered by Flash Transactions · Bet Responsibly
             </p>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Docs</a>
+
+            <div className="flex items-center gap-5 text-sm text-foreground-tertiary">
+              <a href="#" className="hover:text-[#4DA2FF] transition-colors duration-200">Terms</a>
+              <a href="#" className="hover:text-[#4DA2FF] transition-colors duration-200">Privacy</a>
+              <a href="#" className="hover:text-[#4DA2FF] transition-colors duration-200">Docs</a>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Bridge Modal */}
+      <BridgeModal isOpen={bridgeModal.isOpen} onClose={bridgeModal.close} />
     </div>
   );
 }
