@@ -41,9 +41,9 @@ export function useClaims() {
                 // Fallback for wallets that support signTransaction but not signAndExecuteTransaction
                 const client = dAppKit.getClient();
                 const signed = await dAppKit.signTransaction({ transaction: tx });
-                const result = await client.executeTransaction({
-                    transaction: fromBase64(signed.bytes),
-                    signatures: [signed.signature],
+                const result = await client.executeTransactionBlock({
+                    transactionBlock: fromBase64(signed.bytes),
+                    signature: signed.signature,
                 });
                 return result;
             }
@@ -84,9 +84,9 @@ export function useClaims() {
                 // Fallback for wallets that support signTransaction but not signAndExecuteTransaction
                 const client = dAppKit.getClient();
                 const signed = await dAppKit.signTransaction({ transaction: tx });
-                const result = await client.executeTransaction({
-                    transaction: fromBase64(signed.bytes),
-                    signatures: [signed.signature],
+                const result = await client.executeTransactionBlock({
+                    transactionBlock: fromBase64(signed.bytes),
+                    signature: signed.signature,
                 });
                 return result;
             }

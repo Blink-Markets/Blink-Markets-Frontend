@@ -81,10 +81,12 @@ function App() {
 
       const client = dAppKit.getClient();
       const eventObject = await client.getObject({
-        objectId: targetEventId,
-        include: { json: true },
+        id: targetEventId,
+        options: { showContent: true },
       });
-      const eventJson = eventObject.object.json as Record<string, unknown> | null;
+      const eventJson = eventObject.data?.content?.dataType === 'moveObject' 
+        ? (eventObject.data.content.fields as any) 
+        : null;
       const eventStatus = Number(eventJson?.status ?? -1);
       const bettingEnd = Number(eventJson?.betting_end_time ?? 0);
       if (eventStatus !== 1) {
@@ -98,7 +100,7 @@ function App() {
         owner: connection.account.address,
         coinType: "0x2::sui::SUI",
       });
-      const totalBalance = BigInt(balance.balance.balance);
+      const totalBalance = BigInt(balance.totalBalance);
       const reserveForGas = 50_000_000n; // 0.05 SUI safety margin for gas
       if (totalBalance < amountInMist + reserveForGas) {
         throw new Error("Insufficient testnet SUI balance for this bet + gas.");
@@ -129,10 +131,10 @@ function App() {
 
         // Fallback for wallets that support signTransaction but not signAndExecuteTransaction.
         const signed = await dAppKit.signTransaction({ transaction: tx });
-        await client.executeTransaction({
-          transaction: fromBase64(signed.bytes),
-          signatures: [signed.signature],
-          include: { effects: true },
+        await client.executeTransactionBlock({
+          transactionBlock: fromBase64(signed.bytes),
+          signature: signed.signature,
+          options: { showEffects: true },
         });
       }
 
@@ -143,6 +145,56 @@ function App() {
       window.alert(`Failed to place bet: ${message}`);
     }
   }, [allActiveBets, connection.account, dAppKit, eventId, isOnchainBetConfigured, marketId, packageId, placeBet, treasuryId]);
+
+  const handleOpenBet = useCallback(async (betId: string) => {
+    try {
+      if (!connection.account?.address) return;
+      
+      const selectedBet = allActiveBets.find(b => b.id === betId);
+      const targetEventId = selectedBet?.onchain?.eventId;
+      
+      if (!targetEventId || !packageId || !marketId) {
+        throw new Error("Missing configuration for opening event");
+      }
+
+      const client = dAppKit.getClient();
+      
+      // Find MarketCreatorCap
+      const ownedObjects = await client.getOwnedObjects({
+        owner: connection.account.address,
+        options: { showType: true }
+      });
+      
+      const capObject = ownedObjects.data.find(obj => {
+        const type = obj.data?.type;
+        return type && (
+          type.includes('::blink_config::MarketCreatorCap') || 
+          type.includes('::market::MarketCreatorCap') || 
+          type.includes('::blink_event::MarketCreatorCap')
+        );
+      });
+
+      if (!capObject?.data?.objectId) {
+         throw new Error("You need a MarketCreatorCap to open events.");
+      }
+
+      const tx = new Transaction();
+      tx.moveCall({
+        target: `${packageId}::blink_event::open_event`,
+        arguments: [
+          tx.object(capObject.data.objectId),
+          tx.object(targetEventId),
+        ]
+      });
+
+      await dAppKit.signAndExecuteTransaction({ transaction: tx });
+      window.alert("Event opened successfully! Betting is now live.");
+      
+    } catch (e) {
+      console.error("Failed to open event:", e);
+      window.alert(`Failed to open event: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }, [allActiveBets, connection.account, dAppKit, marketId, packageId]);
 
   const placeBetLabel = isContractConfigured() ? "On-chain betting enabled" : "Demo betting mode";
 
@@ -298,9 +350,10 @@ function App() {
                     className="card-entrance"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    <FlashBetCard
+                        <FlashBetCard
                       bet={bet}
                       onPlaceBet={handlePlaceBet}
+                      onOpenBet={handleOpenBet}
                       isConnected={isUserConnected}
                     />
                   </div>

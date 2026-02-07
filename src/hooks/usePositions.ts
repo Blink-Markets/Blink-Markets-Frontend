@@ -28,7 +28,7 @@ export function usePositions(options: UsePositionsOptions = {}) {
                 const client = dAppKit.getClient();
 
                 // Fetch all owned objects
-                const ownedObjects = await (client as any).getOwnedObjects({
+                const ownedObjects = await client.getOwnedObjects({
                     owner: account.address,
                     filter: {
                         StructType: `${PACKAGE_ID}::blink_position::Position`,

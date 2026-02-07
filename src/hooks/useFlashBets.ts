@@ -20,7 +20,7 @@ const convertToFlashBet = (event: ParsedEvent): FlashBet => {
 
     // Map description keywords to categories
     let category: BetCategory = 'All';
-    const desc = event.description.toLowerCase();
+    const desc = (event.description || '').toString().toLowerCase();
 
     if (desc.includes('nba') || desc.includes('bucket') || desc.includes('point')) category = 'NBA';
     else if (desc.includes('nfl') || desc.includes('touchdown') || desc.includes('yard')) category = 'NFL';
@@ -37,14 +37,15 @@ const convertToFlashBet = (event: ParsedEvent): FlashBet => {
 
     return {
         id: `onchain-${event.id}`,
-        title: event.description, // On-chain doesn't have title/desc separation yet
+        title: event.description || 'On-Chain Market', // On-chain doesn't have title/desc separation yet
         description: 'Live On-Chain Market',
         category,
         imageUrl,
         createdAt: event.bettingStartTime,
         expiresAt: event.bettingEndTime,
-        status: event.status === EventStatus.OPEN ? 'active' :
-            event.status === EventStatus.LOCKED ? 'locked' : 'resolved',
+        status: event.status === EventStatus.CREATED ? 'created' :
+            event.status === EventStatus.OPEN ? 'active' :
+                event.status === EventStatus.LOCKED ? 'locked' : 'resolved',
         totalPool: totalPoolSui,
         participants: 0, // Not available on-chain easily without indexing
         optionA: {

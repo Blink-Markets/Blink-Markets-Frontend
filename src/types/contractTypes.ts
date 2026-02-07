@@ -145,13 +145,30 @@ export interface PositionWithEvent {
 }
 
 // Utility functions for type conversion
+const parseMoveString = (value: any): string => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+
+    // Handle Move String struct: { fields: { bytes: number[] } }
+    if (value.fields?.bytes) {
+        return String.fromCharCode(...value.fields.bytes);
+    }
+
+    // Handle raw vector<u8>: number[]
+    if (Array.isArray(value)) {
+        return String.fromCharCode(...value);
+    }
+
+    return String(value);
+};
+
 export const parseEvent = (eventJson: any): ParsedEvent => {
     return {
         id: eventJson.id?.id || eventJson.id,
         marketId: eventJson.market_id,
-        description: eventJson.description,
-        outcomeLabels: (eventJson.outcome_labels || []).map((label: number[]) =>
-            String.fromCharCode(...label)
+        description: parseMoveString(eventJson.description),
+        outcomeLabels: (eventJson.outcome_labels || []).map((label: any) =>
+            parseMoveString(label)
         ),
         outcomePools: (eventJson.outcome_pools || []).map((pool: string) => BigInt(pool)),
         bettingStartTime: Number(eventJson.betting_start_time),

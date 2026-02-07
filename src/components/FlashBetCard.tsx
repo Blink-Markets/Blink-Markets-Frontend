@@ -7,15 +7,17 @@ import { Zap, Users, ChevronRight, Sparkles } from 'lucide-react';
 interface FlashBetCardProps {
     bet: FlashBet;
     onPlaceBet: (betId: string, choice: 'A' | 'B', amount: number) => Promise<void>;
+    onOpenBet?: (betId: string) => Promise<void>;
     isConnected: boolean;
 }
 
 const BET_AMOUNTS = [0.01, 0.05, 0.1, 0.25];
 
-export function FlashBetCard({ bet, onPlaceBet, isConnected }: FlashBetCardProps) {
+export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashBetCardProps) {
     const [selectedChoice, setSelectedChoice] = useState<'A' | 'B' | null>(null);
     const [betAmount, setBetAmount] = useState<number>(0.05);
     const [isPlacing, setIsPlacing] = useState(false);
+    const [isOpening, setIsOpening] = useState(false);
 
     const duration = bet.expiresAt - bet.createdAt;
     const { percentage, isUrgent, isCritical, isExpired, formattedTime } = useCountdown(
@@ -35,137 +37,86 @@ export function FlashBetCard({ bet, onPlaceBet, isConnected }: FlashBetCardProps
         }
     };
 
+    const handleOpenBet = async () => {
+        if (!onOpenBet || !isConnected) return;
+        setIsOpening(true);
+        try {
+            await onOpenBet(bet.id);
+        } finally {
+            setIsOpening(false);
+        }
+    };
+
     const category = CATEGORIES.find(c => c.id === bet.category);
+    const isCreated = bet.status === 'created';
 
     // Determine progress bar color
-    const progressColor = percentage > 50
-        ? 'linear-gradient(90deg, #00E5A0, #00F5B8)'
-        : percentage > 20
-            ? 'linear-gradient(90deg, #FFB84D, #FFC870)'
-            : 'linear-gradient(90deg, #FF4D6A, #FF6B81)';
+    const progressColor = isCreated
+        ? 'linear-gradient(90deg, #A3B8D5, #8A9BB3)'
+        : percentage > 50
+            ? 'linear-gradient(90deg, #00E5A0, #00F5B8)'
+            : percentage > 20
+                ? 'linear-gradient(90deg, #FFB84D, #FFC870)'
+                : 'linear-gradient(90deg, #FF4D6A, #FF6B81)';
 
-    const progressGlow = percentage > 50
-        ? 'rgba(0, 229, 160, 0.5)'
-        : percentage > 20
-            ? 'rgba(255, 184, 77, 0.5)'
-            : 'rgba(255, 77, 106, 0.5)';
+    const progressGlow = isCreated
+        ? 'rgba(163, 184, 213, 0.5)'
+        : percentage > 50
+            ? 'rgba(0, 229, 160, 0.5)'
+            : percentage > 20
+                ? 'rgba(255, 184, 77, 0.5)'
+                : 'rgba(255, 77, 106, 0.5)';
 
     return (
         <div
             className={cn(
                 'group relative flex flex-col rounded-2xl transition-all duration-300 ease-out',
                 'backdrop-blur-sm overflow-hidden',
-                isExpired && 'opacity-50 pointer-events-none',
-                isCritical && !isExpired && 'animate-[shake_0.4s_ease-in-out_infinite]',
+                (isExpired || isCreated) && 'opacity-90',
+                isCritical && !isExpired && !isCreated && 'animate-[shake_0.4s_ease-in-out_infinite]',
             )}
             style={{
-                background: 'linear-gradient(135deg, rgba(13, 27, 42, 0.95) 0%, rgba(15, 31, 56, 0.9) 100%)',
-                border: isCritical && !isExpired
-                    ? '1px solid rgba(255, 77, 106, 0.5)'
-                    : isUrgent && !isExpired
-                        ? '1px solid rgba(255, 184, 77, 0.4)'
-                        : '1px solid rgba(77, 162, 255, 0.15)',
+                background: isCreated 
+                    ? 'rgba(77, 162, 255, 0.12)'
+                    : isExpired
+                        ? 'rgba(107, 124, 149, 0.1)'
+                        : isCritical
+                            ? 'rgba(255, 77, 106, 0.12)'
+                            : isUrgent
+                                ? 'rgba(255, 184, 77, 0.12)'
+                                : 'rgba(0, 229, 160, 0.12)',
+                borderColor: isCreated
+                    ? 'rgba(77, 162, 255, 0.3)'
+                    : isExpired
+                        ? 'rgba(107, 124, 149, 0.2)'
+                        : isCritical
+                            ? 'rgba(255, 77, 106, 0.3)'
+                            : isUrgent
+                                ? 'rgba(255, 184, 77, 0.3)'
+                                : 'rgba(0, 229, 160, 0.3)',
                 boxShadow: isCritical && !isExpired
                     ? '0 0 30px rgba(255, 77, 106, 0.15)'
                     : isUrgent && !isExpired
                         ? '0 0 25px rgba(255, 184, 77, 0.1)'
-                        : '0 8px 32px rgba(0, 0, 0, 0.3)'
+                        : '0 8px 32px rgba(0, 0, 0, 0.3)',
+                color: isCreated
+                    ? '#4DA2FF'
+                    : isExpired
+                        ? '#6B7C95'
+                        : isCritical
+                            ? '#FF4D6A'
+                            : isUrgent
+                                ? '#FFB84D'
+                                : '#00E5A0',
             }}
         >
-            {/* Animated top border */}
-            <div
-                className="absolute top-0 left-0 right-0 h-[2px] opacity-70"
-                style={{
-                    background: 'linear-gradient(90deg, transparent, rgba(77, 162, 255, 0.6), rgba(0, 212, 255, 0.6), transparent)',
-                }}
-            />
-
-            {/* Progress bar at top */}
-            <div className="absolute top-0 left-0 right-0 h-1 rounded-t-2xl overflow-hidden bg-[#1A2D45]/50">
-                <div
-                    className="h-full transition-all duration-100 ease-linear rounded-full"
-                    style={{
-                        width: `${percentage}%`,
-                        background: progressColor,
-                        boxShadow: `0 0 10px ${progressGlow}`
-                    }}
-                />
-            </div>
-
-            {/* Card Content */}
-            <div className="p-5 pt-6 flex-1 flex flex-col">
-                {/* Header with category and timer */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        {/* Market Image */}
-                        {bet.imageUrl && (
-                            <div className="relative">
-                                <div
-                                    className="absolute inset-0 rounded-xl blur-lg opacity-40"
-                                    style={{ background: 'rgba(77, 162, 255, 0.3)' }}
-                                />
-                                <div className="relative w-11 h-11 rounded-xl overflow-hidden ring-2 ring-[#4DA2FF]/30 flex-shrink-0">
-                                    <img
-                                        src={bet.imageUrl}
-                                        alt=""
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            </div>
-                        )}
-                        <div>
-                            <span
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border backdrop-blur-sm"
-                                style={{
-                                    background: 'rgba(77, 162, 255, 0.08)',
-                                    borderColor: 'rgba(77, 162, 255, 0.2)',
-                                    color: '#4DA2FF'
-                                }}
-                            >
-                                <span>{category?.icon}</span>
-                                <span>{category?.label}</span>
+                            {!isExpired && !isCreated && <div className="live-dot" />}
+                            <span className={cn(
+                                isCritical && !isExpired && !isCreated && 'animate-[countdown-tick_1s_ease-in-out_infinite]'
+                            )}>
+                                {isCreated ? 'NOT OPEN' : isExpired ? 'CLOSED' : `${formattedTime}s`}
                             </span>
-                        </div>
-                    </div>
-
-                    {/* Countdown Timer */}
-                    <div
-                        className={cn(
-                            'flex items-center gap-2 px-3 py-2 rounded-xl font-mono font-bold text-base',
-                            'border transition-all duration-200'
-                        )}
-                        style={{
-                            background: isExpired
-                                ? 'rgba(107, 124, 149, 0.1)'
-                                : isCritical
-                                    ? 'rgba(255, 77, 106, 0.12)'
-                                    : isUrgent
-                                        ? 'rgba(255, 184, 77, 0.12)'
-                                        : 'rgba(0, 229, 160, 0.12)',
-                            borderColor: isExpired
-                                ? 'rgba(107, 124, 149, 0.2)'
-                                : isCritical
-                                    ? 'rgba(255, 77, 106, 0.3)'
-                                    : isUrgent
-                                        ? 'rgba(255, 184, 77, 0.3)'
-                                        : 'rgba(0, 229, 160, 0.3)',
-                            color: isExpired
-                                ? '#6B7C95'
-                                : isCritical
-                                    ? '#FF4D6A'
-                                    : isUrgent
-                                        ? '#FFB84D'
-                                        : '#00E5A0',
-                        }}
-                    >
-                        {!isExpired && <div className="live-dot" />}
-                        <span className={cn(
-                            isCritical && !isExpired && 'animate-[countdown-tick_1s_ease-in-out_infinite]'
-                        )}>
-                            {isExpired ? 'CLOSED' : `${formattedTime}s`}
-                        </span>
-                    </div>
-                </div>
+                        <div className="p-5 flex flex-col h-full relative z-10">
 
                 {/* Title & Description */}
                 <h3 className="text-lg font-bold mb-1.5 text-foreground leading-tight">
@@ -177,7 +128,26 @@ export function FlashBetCard({ bet, onPlaceBet, isConnected }: FlashBetCardProps
                     </p>
                 )}
 
-                {/* Outcome Buttons */}
+                {/* Open Event Action */}
+                {isCreated ? (
+                    <div className="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-center">
+                        <p className="text-sm text-blue-300 mb-3">Event created. Waiting to open for betting.</p>
+                        {onOpenBet && isConnected && (
+                            <button
+                                onClick={handleOpenBet}
+                                disabled={isOpening}
+                                className={cn(
+                                    "w-full py-2 rounded-lg text-sm font-semibold transition-colors",
+                                    "bg-blue-500 hover:bg-blue-600 text-white",
+                                    "disabled:opacity-50 disabled:cursor-not-allowed"
+                                )}
+                            >
+                                {isOpening ? 'Opening...' : 'Open Event for Betting'}
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                /* Outcome Buttons */
                 <div className="grid grid-cols-2 gap-3 mb-4">
                     {/* Option A */}
                     <button
@@ -267,6 +237,7 @@ export function FlashBetCard({ bet, onPlaceBet, isConnected }: FlashBetCardProps
                         </span>
                     </button>
                 </div>
+                )}
 
                 {/* Bet Amount Selection - Shows when an option is selected */}
                 {selectedChoice && !isExpired && (

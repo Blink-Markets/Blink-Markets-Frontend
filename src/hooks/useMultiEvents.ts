@@ -34,7 +34,7 @@ export function useMultiEvents(options: UseMultiEventsOptions = {}) {
                 MoveEventType: `${PACKAGE_ID}::blink_event::EventCreated`,
             };
 
-            const eventsQuery = await (client as any).queryEvents({
+            const eventsQuery = await client.queryEvents({
                 query: eventFilter,
                 limit: limit,
                 order: 'descending',
@@ -52,7 +52,7 @@ export function useMultiEvents(options: UseMultiEventsOptions = {}) {
             }
 
             // 2. Fetch current object state for these events in parallel
-            const eventObjects = await (client as any).multiGetObjects({
+            const eventObjects = await client.multiGetObjects({
                 ids: relevantEventIds,
                 options: {
                     showContent: true,

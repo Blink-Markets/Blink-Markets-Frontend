@@ -3,6 +3,7 @@ import { useDAppKit, useCurrentAccount } from '@mysten/dapp-kit-react';
 import { Transaction } from '@mysten/sui/transactions';
 import { X, Plus, Clock } from 'lucide-react';
 import { PACKAGE_ID, MARKET_ID } from '../lib/constants';
+import { useCurrentClient } from '@mysten/dapp-kit-react';
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface CreateEventModalProps {
 export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => {
   const account = useCurrentAccount();
   const dAppKit = useDAppKit();
+  const client = useCurrentClient();
   
   const [description, setDescription] = useState('');
   const [outcomeA, setOutcomeA] = useState('Yes');
@@ -34,12 +36,44 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
       const startTime = now;
       const endTime = now + (parseInt(duration) * 60 * 1000);
 
+      console.log('Searching for MarketCreatorCap for:', account.address);
+      console.log('Package ID:', PACKAGE_ID);
+
+      // 1. Fetch the MarketCreatorCap from the user's wallet
+      // We'll try to get all owned objects and find it manually to be more robust
+      const ownedObjects = await client.getOwnedObjects({
+        owner: account.address,
+        options: {
+          showType: true,
+        },
+      });
+
+      console.log('Objects found:', ownedObjects.data.length);
+      console.log('Object Types:', JSON.stringify(ownedObjects.data.map(o => o.data?.type), null, 2));
+
+      const capObject = ownedObjects.data.find(obj => {
+        const type = obj.data?.type;
+        return type && (
+          type.includes('::blink_config::MarketCreatorCap') || 
+          type.includes('::market::MarketCreatorCap') || 
+          type.includes('::blink_event::MarketCreatorCap')
+        );
+      });
+
+      const creatorCapId = capObject?.data?.objectId;
+
+      if (!creatorCapId) {
+        throw new Error(`MarketCreatorCap not found. Checked ${ownedObjects.data.length} objects.`);
+      }
+
+      console.log('Found MarketCreatorCap:', creatorCapId);
+
       const tx = new Transaction();
       
       tx.moveCall({
         target: `${PACKAGE_ID}::blink_event::create_event`,
         arguments: [
-          tx.object('0x1f0e4279589d902097e3352613ce4318c5750036329068007a3424168c839f99'), // CreateCap ID - hardcoded for demo or passed as prop
+          tx.object(creatorCapId),
           tx.object(MARKET_ID!),
           tx.pure.string(description),
           tx.pure.vector('string', [outcomeA, outcomeB]),
@@ -55,11 +89,14 @@ export const CreateEventModal = ({ isOpen, onClose }: CreateEventModalProps) => 
       onClose();
     } catch (err) {
       console.error('Failed to create event:', err);
-      // More specific error handling
-      if (String(err).includes('ETooManyOutcomes')) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      
+      if (errorMessage.includes('ETooManyOutcomes')) {
         setError('Too many outcomes specified.');
+      } else if (errorMessage.includes('MarketCreatorCap not found')) {
+        setError(errorMessage);
       } else {
-        setError('Failed to create event. Make sure you have the Creator Capability.');
+        setError(`Failed to create event: ${errorMessage}`);
       }
     } finally {
       setIsSubmitting(false);
