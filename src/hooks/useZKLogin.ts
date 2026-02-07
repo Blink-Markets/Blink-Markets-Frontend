@@ -24,12 +24,26 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 // Configuration
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID';
 const REDIRECT_URI = import.meta.env.VITE_ZKLOGIN_REDIRECT_URI || window.location.origin;
+const SUI_NETWORK = (import.meta.env.VITE_SUI_NETWORK || 'testnet').toLowerCase();
 
-// Salt service - In production, use a secure backend service
-const SALT_SERVICE_URL = import.meta.env.VITE_SALT_SERVICE_URL || 'https://salt.api.mystenlabs.com/get_salt';
+const FULLNODE_URLS: Record<string, string> = {
+    mainnet: 'https://fullnode.mainnet.sui.io:443',
+    testnet: 'https://fullnode.testnet.sui.io:443',
+    devnet: 'https://fullnode.devnet.sui.io:443',
+};
 
-// Proving service - Mysten Labs provides this
-const PROVING_SERVICE_URL = import.meta.env.VITE_PROVING_SERVICE_URL || 'https://prover-dev.mystenlabs.com/v1';
+const FULLNODE_URL = FULLNODE_URLS[SUI_NETWORK] || FULLNODE_URLS.testnet;
+
+// Salt service - In production, use a secure backend service (browser calls need a proxy to avoid CORS)
+const DEFAULT_SALT_SERVICE_URL = import.meta.env.DEV
+    ? '/api/salt'
+    : 'https://salt.api.mystenlabs.com/get_salt';
+const SALT_SERVICE_URL = import.meta.env.VITE_SALT_SERVICE_URL || DEFAULT_SALT_SERVICE_URL;
+
+// Proving service - Mysten Labs provides this (devnet uses prover-dev)
+const DEFAULT_PROVING_SERVICE_URL =
+    SUI_NETWORK === 'devnet' ? 'https://prover-dev.mystenlabs.com/v1' : 'https://prover.mystenlabs.com/v1';
+const PROVING_SERVICE_URL = import.meta.env.VITE_PROVING_SERVICE_URL || DEFAULT_PROVING_SERVICE_URL;
 
 // Storage keys
 const STORAGE_KEYS = {
@@ -73,12 +87,18 @@ function parseJwt(token: string): Record<string, unknown> {
     return JSON.parse(jsonPayload);
 }
 
+function toBigIntStringFromBase64(base64: string): string {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+    return BigInt(`0x${hex}`).toString();
+}
+
 /**
  * Get current epoch from Sui network
  */
 async function getCurrentEpoch(): Promise<number> {
     try {
-        const response = await fetch('https://fullnode.testnet.sui.io:443', {
+        const response = await fetch(FULLNODE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -88,6 +108,9 @@ async function getCurrentEpoch(): Promise<number> {
                 params: [],
             }),
         });
+        if (!response.ok) {
+            throw new Error(`Fullnode responded with ${response.status}`);
+        }
         const data = await response.json();
         return Number(data.result.epoch);
     } catch (error) {
@@ -104,21 +127,41 @@ async function getUserSalt(jwt: string): Promise<string> {
         const response = await fetch(SALT_SERVICE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ jwt }),
+            body: JSON.stringify({ token: jwt }),
         });
+        if (!response.ok) {
+            if (response.status === 403) {
+                throw new Error(
+                    'Salt service rejected this OAuth client (403). Use your own salt backend or Enoki-whitelisted client ID.'
+                );
+            }
+            throw new Error(`Salt service responded with ${response.status}`);
+        }
         const data = await response.json();
-        return data.salt;
+        if (!data?.salt) {
+            throw new Error('Salt service did not return a salt');
+        }
+        return String(data.salt);
     } catch (error) {
         console.error('Failed to get user salt:', error);
-        // Fallback: Generate a deterministic salt from JWT sub claim
+        // Fallback (dev only): Generate a deterministic 128-bit salt from JWT sub claim
         const payload = parseJwt(jwt);
-        const sub = payload.sub as string;
+        const sub = payload.sub as string | undefined;
+        if (!sub) {
+            throw new Error('JWT sub claim missing; cannot derive fallback salt');
+        }
         const encoder = new TextEncoder();
         const data = encoder.encode(sub + 'blink_market_salt_v1');
         const hashBuffer = await crypto.subtle.digest('SHA-256', data);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return BigInt('0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join('')).toString();
+        const hashBigInt = BigInt('0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join(''));
+        const maxSalt = 2n ** 128n;
+        return (hashBigInt % maxSalt).toString();
     }
+}
+
+function isMystenHostedProver(url: string): boolean {
+    return url.includes('prover.mystenlabs.com') || url.includes('prover-dev.mystenlabs.com');
 }
 
 /**
@@ -132,13 +175,19 @@ async function generateZkProof(params: {
     salt: string;
     keyClaimName: string;
 }): Promise<unknown> {
+    const normalizedExtendedKey =
+        /^\d+$/.test(params.ephemeralPublicKey)
+            ? params.ephemeralPublicKey
+            : toBigIntStringFromBase64(params.ephemeralPublicKey);
+
     const response = await fetch(PROVING_SERVICE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             jwt: params.jwt,
-            extendedEphemeralPublicKey: params.ephemeralPublicKey,
-            maxEpoch: params.maxEpoch,
+            // BigInt encoding aligns with official prover examples.
+            extendedEphemeralPublicKey: normalizedExtendedKey,
+            maxEpoch: String(params.maxEpoch),
             jwtRandomness: params.randomness,
             salt: params.salt,
             keyClaimName: params.keyClaimName,
@@ -146,7 +195,8 @@ async function generateZkProof(params: {
     });
 
     if (!response.ok) {
-        throw new Error('Failed to generate ZK proof');
+        const errorText = await response.text();
+        throw new Error(`Failed to generate ZK proof (${response.status}): ${errorText}`);
     }
 
     return response.json();
@@ -218,9 +268,35 @@ export function useZKLogin() {
             // Get stored values
             const maxEpoch = parseInt(localStorage.getItem(STORAGE_KEYS.MAX_EPOCH) || '0');
             const randomness = localStorage.getItem(STORAGE_KEYS.RANDOMNESS) || '';
+            if (!maxEpoch || !randomness) {
+                throw new Error('Missing zkLogin session data (maxEpoch/randomness). Start login again.');
+            }
 
             // Get user salt
-            const salt = await getUserSalt(jwt);
+            let usedFallbackSalt = false;
+            let saltFallbackReason: string | null = null;
+            let salt: string;
+            try {
+                salt = await getUserSalt(jwt);
+            } catch (saltError) {
+                // In local/hackathon setups you might not have a whitelisted client ID.
+                // Fall back so the app can still derive a deterministic address.
+                usedFallbackSalt = true;
+                saltFallbackReason =
+                    saltError instanceof Error ? saltError.message : 'Salt service unavailable';
+                const payload = parseJwt(jwt);
+                const sub = payload.sub as string | undefined;
+                if (!sub) {
+                    throw new Error('JWT sub claim missing; cannot derive fallback salt');
+                }
+                const encoder = new TextEncoder();
+                const data = encoder.encode(sub + 'blink_market_salt_v1');
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashBigInt = BigInt('0x' + hashArray.map(b => b.toString(16).padStart(2, '0')).join(''));
+                const maxSalt = 2n ** 128n;
+                salt = (hashBigInt % maxSalt).toString();
+            }
             localStorage.setItem(STORAGE_KEYS.USER_SALT, salt);
 
             // Compute Sui address from JWT (legacyAddress = false for new addresses)
@@ -231,9 +307,12 @@ export function useZKLogin() {
             const ephemeralKeyStr = localStorage.getItem(STORAGE_KEYS.EPHEMERAL_KEY);
             if (ephemeralKeyStr) {
                 try {
-                    const ephemeralKeyPair = Ed25519Keypair.fromSecretKey(
-                        Uint8Array.from(atob(ephemeralKeyStr), c => c.charCodeAt(0))
-                    );
+                    if (usedFallbackSalt && isMystenHostedProver(PROVING_SERVICE_URL)) {
+                        throw new Error(
+                            'Skipping hosted prover call because client ID is not allowlisted. Configure your own salt/prover backend or Enoki.'
+                        );
+                    }
+                    const ephemeralKeyPair = Ed25519Keypair.fromSecretKey(ephemeralKeyStr);
                     const extendedKey = getExtendedEphemeralPublicKey(
                         ephemeralKeyPair.getPublicKey()
                     );
@@ -264,7 +343,9 @@ export function useZKLogin() {
                     picture: userInfo.picture,
                     provider: 'google',
                 },
-                error: null,
+                error: usedFallbackSalt
+                    ? `Limited zkLogin mode: ${saltFallbackReason}. Configure your own salt/prover backend or Enoki to create valid zk proofs.`
+                    : null,
             });
 
         } catch (error) {

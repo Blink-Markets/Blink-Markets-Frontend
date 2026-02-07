@@ -79,6 +79,10 @@ function generateBet(): FlashBet {
     const now = Date.now();
     const duration = 10000 + Math.random() * 8000; // 10-18 seconds
     const variance = 0.7 + Math.random() * 0.6; // 70-130% of base values
+    const randomId =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : Math.random().toString(36).slice(2);
 
     const totalA = Math.floor(template.optionA.totalBets * variance);
     const totalB = Math.floor(template.optionB.totalBets * variance);
@@ -86,7 +90,7 @@ function generateBet(): FlashBet {
 
     return {
         ...template,
-        id: `bet-${now}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `bet-${now}-${randomId}`,
         imageUrl: getRandomImage(template.category as Exclude<BetCategory, 'All'>),
         createdAt: now,
         expiresAt: now + duration,
@@ -152,7 +156,16 @@ export function useFlashBets() {
                 });
 
                 if (nowExpired.length > 0) {
-                    setRecentBets(prev => [...nowExpired, ...prev].slice(0, 10));
+                    setRecentBets(prev => {
+                        const merged = [...nowExpired, ...prev];
+                        const seen = new Set<string>();
+                        const unique = merged.filter(bet => {
+                            if (seen.has(bet.id)) return false;
+                            seen.add(bet.id);
+                            return true;
+                        });
+                        return unique.slice(0, 10);
+                    });
                 }
 
                 return stillActive;
