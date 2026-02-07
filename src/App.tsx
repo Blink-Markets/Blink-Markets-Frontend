@@ -1,6 +1,6 @@
 import { ConnectButton, useCurrentAccount, useDAppKit } from "@mysten/dapp-kit-react";
 import { useStore } from "@nanostores/react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Transaction } from "@mysten/sui/transactions";
 import { Hero } from "./components/Hero";
 import { StatsBar } from "./components/StatsBar";
@@ -15,10 +15,14 @@ import { PositionsPanel } from "./components/PositionsPanel";
 import { isContractConfigured } from "./lib/constants";
 
 
+import { CreateEventModal } from "./components/CreateEventModal";
+
 const MIST_PER_SUI = 1_000_000_000;
 const fromBase64 = (value: string) => Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
 
+
 function App() {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const dAppKit = useDAppKit();
   const account = useCurrentAccount();
   const connection = useStore(dAppKit.stores.$connection);
@@ -176,6 +180,15 @@ function App() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Create Event Button */}
+            <button
+               onClick={() => setIsCreateModalOpen(true)}
+               className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-slate-300 transition-colors"
+            >
+              <Zap size={16} />
+              Create Event
+            </button>
+
             {/* Bridge Button */}
             <BridgeButton onClick={bridgeModal.open} className="hidden sm:flex" />
 
@@ -523,6 +536,12 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Create Event Modal */}
+      <CreateEventModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
 
       {/* Bridge Modal */}
       <BridgeModal isOpen={bridgeModal.isOpen} onClose={bridgeModal.close} />

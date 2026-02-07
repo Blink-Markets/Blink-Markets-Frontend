@@ -43,8 +43,7 @@ export function useClaims() {
                 const signed = await dAppKit.signTransaction({ transaction: tx });
                 const result = await client.executeTransaction({
                     transaction: fromBase64(signed.bytes),
-                    signature: signed.signature,
-                    options: { showEffects: true },
+                    signatures: [signed.signature],
                 });
                 return result;
             }
@@ -87,8 +86,7 @@ export function useClaims() {
                 const signed = await dAppKit.signTransaction({ transaction: tx });
                 const result = await client.executeTransaction({
                     transaction: fromBase64(signed.bytes),
-                    signature: signed.signature,
-                    options: { showEffects: true },
+                    signatures: [signed.signature],
                 });
                 return result;
             }

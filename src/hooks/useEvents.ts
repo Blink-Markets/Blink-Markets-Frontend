@@ -30,18 +30,18 @@ export function useEvents(options: UseEventsOptions = {}) {
                 setError(null);
 
                 const client = dAppKit.getClient();
-                const eventObject = await client.getObject({
+                const eventObject = await (client as any).getObject({
                     id: eventId,
                     options: {
                         showContent: true,
                     },
                 });
 
-                if (!eventObject.data) {
+                if (!(eventObject as any).data) {
                     throw new Error('Event not found');
                 }
 
-                const content = eventObject.data.content;
+                const content = (eventObject as any).data.content;
                 if (content?.dataType !== 'moveObject') {
                     throw new Error('Invalid event object');
                 }
