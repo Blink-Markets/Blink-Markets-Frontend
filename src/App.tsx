@@ -1,4 +1,5 @@
 import { ConnectButton, useCurrentAccount } from "@mysten/dapp-kit-react";
+import { LiveTicker } from "./components/LiveTicker";
 import { Hero } from "./components/Hero";
 import { StatsBar } from "./components/StatsBar";
 import { FlashBetCard } from "./components/FlashBetCard";
@@ -48,6 +49,9 @@ function App() {
       {/* Noise texture overlay */}
       <div className="noise-overlay" />
 
+      {/* Live Price Ticker */}
+      <LiveTicker />
+
       {/* Header */}
       <header className="sticky top-0 z-50 glass-darker">
         <div className="container mx-auto flex h-18 items-center justify-between px-4 py-3">
@@ -83,16 +87,18 @@ function App() {
             </a>
 
             {/* ZKLogin + Wallet Connect */}
+            {/* ZKLogin + Wallet Connect */}
             <ZKLoginButton
               onConnectWallet={() => {
-                // Trigger dapp-kit connect modal
-                const connectBtn = document.querySelector('[data-dapp-kit-connect-button]') as HTMLButtonElement;
-                connectBtn?.click();
+                // Trigger dapp-kit connect modal by clicking the hidden button
+                const wrapper = document.getElementById('sui-connect-btn-wrapper');
+                const btn = wrapper?.querySelector('button');
+                btn?.click();
               }}
             />
 
             {/* Hidden connect button for programmatic access */}
-            <div className="hidden">
+            <div id="sui-connect-btn-wrapper" className="absolute opacity-0 pointer-events-none -z-10 bg-red-500">
               <ConnectButton />
             </div>
           </div>

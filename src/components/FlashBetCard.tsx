@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { FlashBet, CATEGORIES } from '../types/bet';
 import { useCountdown } from '../hooks/useCountdown';
@@ -124,6 +125,17 @@ export function FlashBetCard({ bet, onPlaceBet, isConnected }: FlashBetCardProps
                                 <span>{category?.label}</span>
                             </span>
                         </div>
+                        {bet.oracle === 'Stork' && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#4DA2FF]/10 border border-[#4DA2FF]/20">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4DA2FF] opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4DA2FF]"></span>
+                                </span>
+                                <span className="text-[10px] font-bold text-[#4DA2FF] uppercase tracking-wider">
+                                    Oracle: Stork
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Countdown Timer */}

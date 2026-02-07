@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { FlashBet, BetCategory, CATEGORY_IMAGES } from '../types/bet';
+import { useStorkOracle } from './useStorkOracle';
 
 // Sample flash bet templates
 const SAMPLE_BETS: Omit<FlashBet, 'id' | 'createdAt' | 'expiresAt' | 'status' | 'participants'>[] = [
@@ -74,8 +76,18 @@ function getRandomImage(category: Exclude<BetCategory, 'All'>): string {
     return images[Math.floor(Math.random() * images.length)];
 }
 
-function generateBet(): FlashBet {
-    const template = SAMPLE_BETS[Math.floor(Math.random() * SAMPLE_BETS.length)];
+function generateBet(storkPrices?: Record<string, number>): FlashBet {
+    let templates = SAMPLE_BETS;
+
+    // If we have Stork prices, prioritized Crypto bets more often
+    if (storkPrices && Math.random() > 0.4) {
+        const cryptoBets = SAMPLE_BETS.filter(b => b.category === 'Crypto');
+        if (cryptoBets.length > 0) {
+            templates = cryptoBets;
+        }
+    }
+
+    const template = templates[Math.floor(Math.random() * templates.length)];
     const now = Date.now();
     const duration = 10000 + Math.random() * 8000; // 10-18 seconds
     const variance = 0.7 + Math.random() * 0.6; // 70-130% of base values
@@ -83,6 +95,20 @@ function generateBet(): FlashBet {
     const totalA = Math.floor(template.optionA.totalBets * variance);
     const totalB = Math.floor(template.optionB.totalBets * variance);
     const total = totalA + totalB;
+
+    let startPrice: number | undefined;
+    let oracleType: 'Stork' | 'Simulated' = 'Simulated';
+
+    // If it's a crypto bet and we have a price, use it!
+    if (template.category === 'Crypto' && storkPrices) {
+        if (template.title.includes('BTC') && storkPrices['BTC']) {
+            startPrice = storkPrices['BTC'];
+            oracleType = 'Stork';
+        } else if (template.title.includes('ETH') && storkPrices['ETH']) {
+            startPrice = storkPrices['ETH'];
+            oracleType = 'Stork';
+        }
+    }
 
     return {
         ...template,
@@ -103,6 +129,8 @@ function generateBet(): FlashBet {
             percentage: Math.round((totalB / total) * 100),
         },
         totalPool: total,
+        startPrice,
+        oracle: oracleType,
     };
 }
 
@@ -110,6 +138,21 @@ export function useFlashBets() {
     const [activeBets, setActiveBets] = useState<FlashBet[]>([]);
     const [recentBets, setRecentBets] = useState<FlashBet[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<BetCategory>('All');
+
+    // Connect to Stork Oracle for BTC, ETH, SUI prices
+    const { prices: storkPrices, isConnected: isStorkConnected } = useStorkOracle(['BTC', 'ETH', 'SUI']);
+
+    // Helper to get simple price map
+    const simplePrices = Object.entries(storkPrices).reduce((acc, [key, data]) => {
+        acc[key] = data.price;
+        return acc;
+    }, {} as Record<string, number>);
+
+    // Use a ref to access current prices inside the interval closure without re-creating the interval
+    const pricesRef = useRef(simplePrices);
+    useEffect(() => {
+        pricesRef.current = simplePrices;
+    }, [simplePrices]);
 
     // Generate initial bets
     useEffect(() => {
@@ -120,30 +163,57 @@ export function useFlashBets() {
     // Add new bets periodically
     useEffect(() => {
         const interval = setInterval(() => {
-            if (activeBets.length < 6) {
-                const newBet = generateBet();
-                setActiveBets(prev => [...prev, newBet]);
-            }
+            setActiveBets(prev => {
+                if (prev.length < 6) {
+                    const newBet = generateBet(pricesRef.current);
+                    return [...prev, newBet];
+                }
+                return prev;
+            });
         }, 6000);
 
         return () => clearInterval(interval);
-    }, [activeBets.length]);
+    }, []);
 
     // Check for expired bets and resolve them
     useEffect(() => {
         const interval = setInterval(() => {
             const now = Date.now();
+            const currentPrices = pricesRef.current;
 
             setActiveBets(prev => {
                 const stillActive: FlashBet[] = [];
                 const nowExpired: FlashBet[] = [];
+                let hasChanges = false;
 
                 prev.forEach(bet => {
                     if (bet.expiresAt <= now) {
+                        hasChanges = true;
+                        let winner: 'A' | 'B' = Math.random() > 0.5 ? 'A' : 'B';
+                        let finalPrice: number | undefined;
+
+                        // Resolve with Stork Oracle if applicable
+                        if (bet.oracle === 'Stork' && bet.startPrice) {
+                            let assetKey = '';
+                            if (bet.title.includes('BTC')) assetKey = 'BTC';
+                            if (bet.title.includes('ETH')) assetKey = 'ETH';
+
+                            if (assetKey && currentPrices[assetKey]) {
+                                finalPrice = currentPrices[assetKey];
+                                // A = Up/Bullish, B = Down/Bearish
+                                if (finalPrice >= bet.startPrice) {
+                                    winner = 'A';
+                                } else {
+                                    winner = 'B';
+                                }
+                            }
+                        }
+
                         const resolved: FlashBet = {
                             ...bet,
                             status: 'resolved',
-                            winner: Math.random() > 0.5 ? 'A' : 'B',
+                            winner,
+                            endPrice: finalPrice
                         };
                         nowExpired.push(resolved);
                     } else {
@@ -151,11 +221,12 @@ export function useFlashBets() {
                     }
                 });
 
-                if (nowExpired.length > 0) {
-                    setRecentBets(prev => [...nowExpired, ...prev].slice(0, 10));
+                if (hasChanges && nowExpired.length > 0) {
+                    setRecentBets(prevRecents => [...nowExpired, ...prevRecents].slice(0, 10));
+                    return stillActive;
                 }
 
-                return stillActive;
+                return prev;
             });
         }, 100);
 
@@ -215,5 +286,7 @@ export function useFlashBets() {
         placeBet,
         selectedCategory,
         setSelectedCategory,
+        storkPrices: simplePrices,
+        isStorkConnected,
     };
 }

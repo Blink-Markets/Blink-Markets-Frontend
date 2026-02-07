@@ -12,6 +12,9 @@ export interface FlashBet {
     participants: number;
     status: 'active' | 'locked' | 'resolved';
     winner?: 'A' | 'B';
+    startPrice?: number;
+    endPrice?: number;
+    oracle?: 'Stork' | 'Simulated';
 }
 
 export interface BetOption {
