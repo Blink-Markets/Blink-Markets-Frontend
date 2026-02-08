@@ -92,20 +92,30 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
                                 : '#00E5A0',
             }}
         >
-            {!isExpired && !isCreated && <div className="live-dot" />}
-            <span className={cn(
-                isCritical && !isExpired && !isCreated && 'animate-[countdown-tick_1s_ease-in-out_infinite]'
-            )}>
-                {isCreated ? 'NOT OPEN' : isExpired ? 'CLOSED' : `${formattedTime}s`}
-            </span>
             <div className="p-5 flex flex-col h-full relative z-10">
+                {/* Countdown Timer - Centered */}
+                <div className="flex justify-center mb-4">
+                    <div className="flex items-center gap-2">
+                        {!isExpired && !isCreated && <div className="live-dot" />}
+                        <span className={cn(
+                            'text-sm font-bold px-3 py-1 rounded-full',
+                            isCreated && 'bg-blue-500/20 text-blue-400',
+                            isExpired && 'bg-gray-500/20 text-gray-400',
+                            !isCreated && !isExpired && isCritical && 'bg-red-500/20 text-red-400 animate-[countdown-tick_1s_ease-in-out_infinite]',
+                            !isCreated && !isExpired && isUrgent && !isCritical && 'bg-yellow-500/20 text-yellow-400',
+                            !isCreated && !isExpired && !isUrgent && !isCritical && 'bg-green-500/20 text-green-400'
+                        )}>
+                            {isCreated ? 'NOT OPEN' : isExpired ? 'CLOSED' : `${formattedTime}s`}
+                        </span>
+                    </div>
+                </div>
 
                 {/* Title & Description */}
-                <h3 className="text-lg font-bold mb-1.5 text-foreground leading-tight">
+                <h3 className="text-lg font-bold mb-1.5 text-foreground leading-tight text-center">
                     {bet.title}
                 </h3>
                 {bet.description && (
-                    <p className="text-sm text-foreground-tertiary mb-5 line-clamp-2 leading-relaxed">
+                    <p className="text-sm text-foreground-tertiary mb-5 line-clamp-2 leading-relaxed text-center">
                         {bet.description}
                     </p>
                 )}
@@ -146,7 +156,7 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
                         )}
                     </div>
                 ) : bet.status === 'locked' ? (
-                     <div className="mb-6 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
+                    <div className="mb-6 p-4 rounded-xl bg-purple-500/10 border border-purple-500/20 text-center">
                         <p className="text-sm text-purple-300 mb-3">Event locked. Select winner to resolve.</p>
                         {onOpenBet && isConnected && (
                             <div className="grid grid-cols-2 gap-3">

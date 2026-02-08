@@ -84,8 +84,8 @@ function App() {
         id: targetEventId,
         options: { showContent: true },
       });
-      const eventJson = eventObject.data?.content?.dataType === 'moveObject' 
-        ? (eventObject.data.content.fields as any) 
+      const eventJson = eventObject.data?.content?.dataType === 'moveObject'
+        ? (eventObject.data.content.fields as any)
         : null;
       const eventStatus = Number(eventJson?.status ?? -1);
       const bettingEnd = Number(eventJson?.betting_end_time ?? 0);
@@ -149,7 +149,7 @@ function App() {
   const handleOpenBet = useCallback(async (betId: string) => {
     try {
       if (!connection.account?.address) return;
-      
+
       // Parse action from betId (e.g. "bet-123-resolve-0")
       let action = 'open';
       let actualBetId = betId;
@@ -161,95 +161,95 @@ function App() {
         outcomeIndex = parseInt(parts[1]);
         action = 'resolve';
       } else if (betId.includes('-lock')) { // We can just use the same ID for lock if we want, or add suffix
-         // For now, let's assume if it is expired in UI, the button triggers this. 
-         // But wait, the UI passes `bet.id`. 
-         // To differentiate properly without changing props, let's rely on the button text/state or just check onchain status?
-         // Simpler: The UI component passed `bet.id` for Open/Lock (ambiguous) but `bet.id + '-resolve-X'` for resolve.
-         // Let's check the event status first and decide whether to Open or Lock.
+        // For now, let's assume if it is expired in UI, the button triggers this. 
+        // But wait, the UI passes `bet.id`. 
+        // To differentiate properly without changing props, let's rely on the button text/state or just check onchain status?
+        // Simpler: The UI component passed `bet.id` for Open/Lock (ambiguous) but `bet.id + '-resolve-X'` for resolve.
+        // Let's check the event status first and decide whether to Open or Lock.
       }
 
       const selectedBet = allActiveBets.find(b => b.id === actualBetId);
       const targetEventId = selectedBet?.onchain?.eventId;
-      
+
       if (!targetEventId || !packageId || !marketId) {
         throw new Error("Missing configuration for event");
       }
 
       const client = dAppKit.getClient();
-      
+
       // Fetch current event status to decide action (Open vs Lock)
       const eventObject = await client.getObject({
         id: targetEventId,
         options: { showContent: true },
       });
-      const eventJson = eventObject.data?.content?.dataType === 'moveObject' 
-        ? (eventObject.data.content.fields as any) 
+      const eventJson = eventObject.data?.content?.dataType === 'moveObject'
+        ? (eventObject.data.content.fields as any)
         : null;
       const eventStatus = Number(eventJson?.status ?? -1);
-      
+
       // Prepare transaction
       const tx = new Transaction();
 
       if (action === 'resolve') {
-         // Resolve Event
-         console.log(`Resolving event ${targetEventId} with outcome ${outcomeIndex}`);
-         
-         tx.moveCall({
-            target: `${packageId}::blink_event::resolve_event`,
-            arguments: [
-              tx.object(targetEventId),
-              tx.object(marketId),
-              tx.pure.u8(outcomeIndex),
-              tx.object("0x6"), // Clock
-            ]
-         });
+        // Resolve Event
+        console.log(`Resolving event ${targetEventId} with outcome ${outcomeIndex}`);
+
+        tx.moveCall({
+          target: `${packageId}::blink_event::resolve_event`,
+          arguments: [
+            tx.object(targetEventId),
+            tx.object(marketId),
+            tx.pure.u8(outcomeIndex),
+            tx.object("0x6"), // Clock
+          ]
+        });
 
       } else {
         // Find MarketCreatorCap
         const ownedObjects = await client.getOwnedObjects({
-            owner: connection.account.address,
-            options: { showType: true }
+          owner: connection.account.address,
+          options: { showType: true }
         });
-        
+
         const capObject = ownedObjects.data.find(obj => {
-            const type = obj.data?.type;
-            return type && (
-            type.includes('::blink_config::MarketCreatorCap') || 
-            type.includes('::market::MarketCreatorCap') || 
+          const type = obj.data?.type;
+          return type && (
+            type.includes('::blink_config::MarketCreatorCap') ||
+            type.includes('::market::MarketCreatorCap') ||
             type.includes('::blink_event::MarketCreatorCap')
-            );
+          );
         });
 
         if (!capObject?.data?.objectId) {
-            throw new Error("You need a MarketCreatorCap to manage events.");
+          throw new Error("You need a MarketCreatorCap to manage events.");
         }
 
         if (eventStatus === 0) { // CREATED -> OPEN
-            console.log(`Opening event ${targetEventId}`);
-            tx.moveCall({
-                target: `${packageId}::blink_event::open_event`,
-                arguments: [
-                tx.object(capObject.data.objectId),
-                tx.object(targetEventId),
-                ]
-            });
+          console.log(`Opening event ${targetEventId}`);
+          tx.moveCall({
+            target: `${packageId}::blink_event::open_event`,
+            arguments: [
+              tx.object(capObject.data.objectId),
+              tx.object(targetEventId),
+            ]
+          });
         } else if (eventStatus === 1) { // OPEN -> LOCKED
-             console.log(`Locking event ${targetEventId}`);
-             tx.moveCall({
-                target: `${packageId}::blink_event::lock_event`,
-                arguments: [
-                tx.object(capObject.data.objectId),
-                tx.object(targetEventId),
-                ]
-            });
+          console.log(`Locking event ${targetEventId}`);
+          tx.moveCall({
+            target: `${packageId}::blink_event::lock_event`,
+            arguments: [
+              tx.object(capObject.data.objectId),
+              tx.object(targetEventId),
+            ]
+          });
         } else {
-            throw new Error("Event is already locked or resolved.");
+          throw new Error("Event is already locked or resolved.");
         }
       }
 
       await dAppKit.signAndExecuteTransaction({ transaction: tx });
       window.alert(`Action completed successfully!`);
-      
+
     } catch (e) {
       console.error("Failed to manage event:", e);
       window.alert(`Failed to manage event: ${e instanceof Error ? e.message : String(e)}`);
@@ -274,67 +274,58 @@ function App() {
         <div className="container mx-auto flex h-18 items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <div className="relative group">
-              <div
-                className="absolute inset-0 rounded-xl blur-lg opacity-60"
-                style={{ background: 'linear-gradient(135deg, #4DA2FF, #00D4FF)' }}
+              <img
+                src="/logo.png"
+                alt="Blink Market"
+                className="h-20 w-auto transition-transform duration-300 group-hover:scale-105"
               />
-              <div
-                className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105"
-                style={{ background: 'linear-gradient(135deg, #4DA2FF, #00D4FF, #00E5A0)' }}
-              >
-                <Zap size={22} className="text-white" fill="currentColor" />
-              </div>
             </div>
-            <span className="font-display text-xl font-bold">
-              <span className="gradient-text-animated">Blink</span>
-              <span className="text-foreground">Market</span>
-            </span>
           </div>
 
           <div className="flex items-center gap-4">
             {/* Create Event Button */}
             <button
-               onClick={() => setIsCreateModalOpen(true)}
-               className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-slate-300 transition-colors"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-slate-300 transition-colors"
             >
               <Zap size={16} />
               Create Event
             </button>
-            
+
             {/* Oracle Registration Button (Admin Only) */}
             <button
-                onClick={async () => {
-                    try {
-                        if (!connection.account?.address || !packageId || !marketId) return;
-                        const client = dAppKit.getClient();
-                        const ownedObjects = await client.getOwnedObjects({
-                            owner: connection.account.address,
-                            options: { showType: true }
-                        });
-                        const adminCap = ownedObjects.data.find(obj => obj.data?.type?.includes('::blink_config::AdminCap'));
-                        if (!adminCap?.data?.objectId) {
-                            alert("AdminCap not found. You cannot register oracles.");
-                            return;
-                        }
-                        const tx = new Transaction();
-                        tx.moveCall({
-                            target: `${packageId}::blink_config::add_oracle`,
-                            arguments: [
-                                tx.object(adminCap.data.objectId),
-                                tx.object(marketId),
-                                tx.pure.address(connection.account.address)
-                            ]
-                        });
-                        await dAppKit.signAndExecuteTransaction({ transaction: tx });
-                        alert("Successfully registered as Oracle!");
-                    } catch (e) {
-                         console.error(e);
-                         alert("Failed to register oracle: " + e);
-                    }
-                }}
-               className="hidden md:flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-lg text-sm text-purple-300 transition-colors"
+              onClick={async () => {
+                try {
+                  if (!connection.account?.address || !packageId || !marketId) return;
+                  const client = dAppKit.getClient();
+                  const ownedObjects = await client.getOwnedObjects({
+                    owner: connection.account.address,
+                    options: { showType: true }
+                  });
+                  const adminCap = ownedObjects.data.find(obj => obj.data?.type?.includes('::blink_config::AdminCap'));
+                  if (!adminCap?.data?.objectId) {
+                    alert("AdminCap not found. You cannot register oracles.");
+                    return;
+                  }
+                  const tx = new Transaction();
+                  tx.moveCall({
+                    target: `${packageId}::blink_config::add_oracle`,
+                    arguments: [
+                      tx.object(adminCap.data.objectId),
+                      tx.object(marketId),
+                      tx.pure.address(connection.account.address)
+                    ]
+                  });
+                  await dAppKit.signAndExecuteTransaction({ transaction: tx });
+                  alert("Successfully registered as Oracle!");
+                } catch (e) {
+                  console.error(e);
+                  alert("Failed to register oracle: " + e);
+                }
+              }}
+              className="hidden md:flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 rounded-lg text-sm text-purple-300 transition-colors"
             >
-               Register Oracle
+              Register Oracle
             </button>
 
             {/* Bridge Button */}
@@ -446,7 +437,7 @@ function App() {
                     className="card-entrance"
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                        <FlashBetCard
+                    <FlashBetCard
                       bet={bet}
                       onPlaceBet={handlePlaceBet}
                       onOpenBet={handleOpenBet}
@@ -650,16 +641,12 @@ function App() {
       >
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #4DA2FF, #00D4FF)' }}
-              >
-                <Zap size={14} className="text-white" fill="currentColor" />
-              </div>
-              <span className="font-display font-semibold text-foreground-secondary">
-                BlinkMarket
-              </span>
+            <div className="flex items-center gap-2">
+              <img
+                src="/logo.png"
+                alt="Blink Market"
+                className="h-16 w-auto"
+              />
             </div>
 
             <p className="text-sm text-foreground-tertiary text-center flex items-center gap-2">
@@ -687,9 +674,9 @@ function App() {
       </footer>
 
       {/* Create Event Modal */}
-      <CreateEventModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
+      <CreateEventModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
 
       {/* Bridge Modal */}
