@@ -18,10 +18,10 @@ export function OwnedObjects() {
     queryFn: async () => {
       if (!account) return null;
 
-      const { response } = await client.stateService.listOwnedObjects({
+      const response = await client.getOwnedObjects({
         owner: account.address,
       });
-      return response.objects ?? [];
+      return response.data ?? [];
     },
     enabled: !!account,
   });
@@ -55,10 +55,10 @@ export function OwnedObjects() {
           <div className="space-y-2">
             {data.map((object) => (
               <div
-                key={object.objectId}
+                key={object.data?.objectId}
                 className="rounded-md border bg-muted/50 p-3"
               >
-                <p className="font-mono text-xs break-all">{object.objectId}</p>
+                <p className="font-mono text-xs break-all">{object.data?.objectId}</p>
               </div>
             ))}
           </div>

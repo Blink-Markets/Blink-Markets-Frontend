@@ -5,13 +5,70 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Blink Market - Ultra-fast flash betting on live events powered by Sui blockchain" />
+  <meta name="description"
+    content="Blink Market - Ultra-fast flash betting on live events powered by Sui blockchain. 10-second markets with instant settlement." />
+  <meta name="theme-color" content="#050B15" />
+  <meta name="keywords" content="Sui, blockchain, betting, flash betting, crypto, decentralized, prediction market" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Blink Market | Flash Betting on Sui" />
+  <meta property="og:description"
+    content="Ultra-fast flash betting on live events. 10-second markets with instant settlement powered by Sui." />
+  <meta property="og:type" content="website" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Blink Market | Flash Betting on Sui" />
+  <meta name="twitter:description"
+    content="Ultra-fast flash betting on live events. 10-second markets with instant settlement." />
+
+  <!-- Fonts - Inter for body, Space Grotesk for display -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700;800&display=swap"
     rel="stylesheet">
-  <title>Blink Market | Flash Betting</title>
+
+  <title>Blink Market | Flash Betting on Sui</title>
+
+  <style>
+    /* Critical CSS for initial load */
+    :root {
+      --sui-bg: #050B15;
+      --sui-primary: #4DA2FF;
+    }
+
+    html {
+      background-color: var(--sui-bg);
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--sui-bg);
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+    }
+
+    /* Loading animation */
+    #root:empty::before {
+      content: '';
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 40px;
+      height: 40px;
+      margin: -20px 0 0 -20px;
+      border: 3px solid rgba(77, 162, 255, 0.1);
+      border-top-color: var(--sui-primary);
+      border-radius: 50%;
+      animation: sui-spinner 0.8s linear infinite;
+    }
+
+    @keyframes sui-spinner {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 
 <body class="min-h-screen antialiased">

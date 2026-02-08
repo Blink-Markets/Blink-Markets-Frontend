@@ -10,8 +10,13 @@ export interface FlashBet {
     expiresAt: number;
     totalPool: number;
     participants: number;
-    status: 'active' | 'locked' | 'resolved';
+    status: 'created' | 'active' | 'locked' | 'resolved';
     winner?: 'A' | 'B';
+    onchain?: {
+        eventId: string;
+        outcomeAIndex?: number;
+        outcomeBIndex?: number;
+    };
 }
 
 export interface BetOption {

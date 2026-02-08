@@ -9,15 +9,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lifi/widget": "^3.40.6",
     "@mysten/dapp-kit-react": "^1.0.1",
+    "@mysten/enoki": "^1.0.2",
     "@mysten/sui": "^2.2.0",
+    "@mysten/wallet-standard": "^0.20.0",
     "@nanostores/react": "^1.0.0",
     "@tanstack/react-query": "^5.90.16",
+    "@wallet-standard/ui": "^1.0.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "viem": "^2.45.1",
+    "wagmi": "2"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
