@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlashBet, CATEGORIES } from '../types/bet';
+import { FlashBet } from '../types/bet';
 import { useCountdown } from '../hooks/useCountdown';
 import { cn } from '../lib/utils';
 import { Zap, Users, ChevronRight, Sparkles } from 'lucide-react';
@@ -20,7 +20,7 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
     const [isOpening, setIsOpening] = useState(false);
 
     const duration = bet.expiresAt - bet.createdAt;
-    const { percentage, isUrgent, isCritical, isExpired, formattedTime } = useCountdown(
+    const { isUrgent, isCritical, isExpired, formattedTime } = useCountdown(
         bet.expiresAt,
         duration
     );
@@ -47,25 +47,7 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
         }
     };
 
-    const category = CATEGORIES.find(c => c.id === bet.category);
     const isCreated = bet.status === 'created';
-
-    // Determine progress bar color
-    const progressColor = isCreated
-        ? 'linear-gradient(90deg, #A3B8D5, #8A9BB3)'
-        : percentage > 50
-            ? 'linear-gradient(90deg, #00E5A0, #00F5B8)'
-            : percentage > 20
-                ? 'linear-gradient(90deg, #FFB84D, #FFC870)'
-                : 'linear-gradient(90deg, #FF4D6A, #FF6B81)';
-
-    const progressGlow = isCreated
-        ? 'rgba(163, 184, 213, 0.5)'
-        : percentage > 50
-            ? 'rgba(0, 229, 160, 0.5)'
-            : percentage > 20
-                ? 'rgba(255, 184, 77, 0.5)'
-                : 'rgba(255, 77, 106, 0.5)';
 
     return (
         <div
@@ -76,7 +58,7 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
                 isCritical && !isExpired && !isCreated && 'animate-[shake_0.4s_ease-in-out_infinite]',
             )}
             style={{
-                background: isCreated 
+                background: isCreated
                     ? 'rgba(77, 162, 255, 0.12)'
                     : isExpired
                         ? 'rgba(107, 124, 149, 0.1)'
@@ -110,13 +92,13 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
                                 : '#00E5A0',
             }}
         >
-                            {!isExpired && !isCreated && <div className="live-dot" />}
-                            <span className={cn(
-                                isCritical && !isExpired && !isCreated && 'animate-[countdown-tick_1s_ease-in-out_infinite]'
-                            )}>
-                                {isCreated ? 'NOT OPEN' : isExpired ? 'CLOSED' : `${formattedTime}s`}
-                            </span>
-                        <div className="p-5 flex flex-col h-full relative z-10">
+            {!isExpired && !isCreated && <div className="live-dot" />}
+            <span className={cn(
+                isCritical && !isExpired && !isCreated && 'animate-[countdown-tick_1s_ease-in-out_infinite]'
+            )}>
+                {isCreated ? 'NOT OPEN' : isExpired ? 'CLOSED' : `${formattedTime}s`}
+            </span>
+            <div className="p-5 flex flex-col h-full relative z-10">
 
                 {/* Title & Description */}
                 <h3 className="text-lg font-bold mb-1.5 text-foreground leading-tight">
@@ -147,96 +129,96 @@ export function FlashBetCard({ bet, onPlaceBet, onOpenBet, isConnected }: FlashB
                         )}
                     </div>
                 ) : (
-                /* Outcome Buttons */
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                    {/* Option A */}
-                    <button
-                        onClick={() => !isExpired && setSelectedChoice('A')}
-                        disabled={isExpired}
-                        className={cn(
-                            'outcome-btn outcome-btn-a relative p-4 rounded-xl border-2 text-left transition-all duration-200',
-                            selectedChoice === 'A' ? 'selected' : 'hover:border-[#00E5A0]/40',
-                            isExpired && 'cursor-not-allowed'
-                        )}
-                        style={{
-                            background: selectedChoice === 'A'
-                                ? 'rgba(0, 229, 160, 0.12)'
-                                : 'rgba(26, 45, 69, 0.5)',
-                            borderColor: selectedChoice === 'A'
-                                ? '#00E5A0'
-                                : 'rgba(77, 162, 255, 0.15)',
-                            boxShadow: selectedChoice === 'A'
-                                ? '0 0 30px rgba(0, 229, 160, 0.2), inset 0 0 20px rgba(0, 229, 160, 0.05)'
-                                : 'none'
-                        }}
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-sm text-foreground truncate">
-                                {bet.optionA.shortLabel || bet.optionA.label}
+                    /* Outcome Buttons */
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        {/* Option A */}
+                        <button
+                            onClick={() => !isExpired && setSelectedChoice('A')}
+                            disabled={isExpired}
+                            className={cn(
+                                'outcome-btn outcome-btn-a relative p-4 rounded-xl border-2 text-left transition-all duration-200',
+                                selectedChoice === 'A' ? 'selected' : 'hover:border-[#00E5A0]/40',
+                                isExpired && 'cursor-not-allowed'
+                            )}
+                            style={{
+                                background: selectedChoice === 'A'
+                                    ? 'rgba(0, 229, 160, 0.12)'
+                                    : 'rgba(26, 45, 69, 0.5)',
+                                borderColor: selectedChoice === 'A'
+                                    ? '#00E5A0'
+                                    : 'rgba(77, 162, 255, 0.15)',
+                                boxShadow: selectedChoice === 'A'
+                                    ? '0 0 30px rgba(0, 229, 160, 0.2), inset 0 0 20px rgba(0, 229, 160, 0.05)'
+                                    : 'none'
+                            }}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-sm text-foreground truncate">
+                                    {bet.optionA.shortLabel || bet.optionA.label}
+                                </span>
+                                <span
+                                    className="font-bold text-lg"
+                                    style={{ color: '#00E5A0' }}
+                                >
+                                    {bet.optionA.odds.toFixed(2)}x
+                                </span>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="progress-track h-1.5 mb-1.5">
+                                <div
+                                    className="progress-bar-a h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${bet.optionA.percentage}%` }}
+                                />
+                            </div>
+                            <span className="text-xs text-foreground-tertiary">
+                                {bet.optionA.percentage}% · {bet.optionA.totalBets.toLocaleString()} SUI
                             </span>
-                            <span
-                                className="font-bold text-lg"
-                                style={{ color: '#00E5A0' }}
-                            >
-                                {bet.optionA.odds.toFixed(2)}x
-                            </span>
-                        </div>
-                        {/* Progress bar */}
-                        <div className="progress-track h-1.5 mb-1.5">
-                            <div
-                                className="progress-bar-a h-full rounded-full transition-all duration-300"
-                                style={{ width: `${bet.optionA.percentage}%` }}
-                            />
-                        </div>
-                        <span className="text-xs text-foreground-tertiary">
-                            {bet.optionA.percentage}% · {bet.optionA.totalBets.toLocaleString()} SUI
-                        </span>
-                    </button>
+                        </button>
 
-                    {/* Option B */}
-                    <button
-                        onClick={() => !isExpired && setSelectedChoice('B')}
-                        disabled={isExpired}
-                        className={cn(
-                            'outcome-btn outcome-btn-b relative p-4 rounded-xl border-2 text-left transition-all duration-200',
-                            selectedChoice === 'B' ? 'selected' : 'hover:border-[#FFB84D]/40',
-                            isExpired && 'cursor-not-allowed'
-                        )}
-                        style={{
-                            background: selectedChoice === 'B'
-                                ? 'rgba(255, 184, 77, 0.12)'
-                                : 'rgba(26, 45, 69, 0.5)',
-                            borderColor: selectedChoice === 'B'
-                                ? '#FFB84D'
-                                : 'rgba(77, 162, 255, 0.15)',
-                            boxShadow: selectedChoice === 'B'
-                                ? '0 0 30px rgba(255, 184, 77, 0.2), inset 0 0 20px rgba(255, 184, 77, 0.05)'
-                                : 'none'
-                        }}
-                    >
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="font-semibold text-sm text-foreground truncate">
-                                {bet.optionB.shortLabel || bet.optionB.label}
+                        {/* Option B */}
+                        <button
+                            onClick={() => !isExpired && setSelectedChoice('B')}
+                            disabled={isExpired}
+                            className={cn(
+                                'outcome-btn outcome-btn-b relative p-4 rounded-xl border-2 text-left transition-all duration-200',
+                                selectedChoice === 'B' ? 'selected' : 'hover:border-[#FFB84D]/40',
+                                isExpired && 'cursor-not-allowed'
+                            )}
+                            style={{
+                                background: selectedChoice === 'B'
+                                    ? 'rgba(255, 184, 77, 0.12)'
+                                    : 'rgba(26, 45, 69, 0.5)',
+                                borderColor: selectedChoice === 'B'
+                                    ? '#FFB84D'
+                                    : 'rgba(77, 162, 255, 0.15)',
+                                boxShadow: selectedChoice === 'B'
+                                    ? '0 0 30px rgba(255, 184, 77, 0.2), inset 0 0 20px rgba(255, 184, 77, 0.05)'
+                                    : 'none'
+                            }}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-sm text-foreground truncate">
+                                    {bet.optionB.shortLabel || bet.optionB.label}
+                                </span>
+                                <span
+                                    className="font-bold text-lg"
+                                    style={{ color: '#FFB84D' }}
+                                >
+                                    {bet.optionB.odds.toFixed(2)}x
+                                </span>
+                            </div>
+                            {/* Progress bar */}
+                            <div className="progress-track h-1.5 mb-1.5">
+                                <div
+                                    className="progress-bar-b h-full rounded-full transition-all duration-300"
+                                    style={{ width: `${bet.optionB.percentage}%` }}
+                                />
+                            </div>
+                            <span className="text-xs text-foreground-tertiary">
+                                {bet.optionB.percentage}% · {bet.optionB.totalBets.toLocaleString()} SUI
                             </span>
-                            <span
-                                className="font-bold text-lg"
-                                style={{ color: '#FFB84D' }}
-                            >
-                                {bet.optionB.odds.toFixed(2)}x
-                            </span>
-                        </div>
-                        {/* Progress bar */}
-                        <div className="progress-track h-1.5 mb-1.5">
-                            <div
-                                className="progress-bar-b h-full rounded-full transition-all duration-300"
-                                style={{ width: `${bet.optionB.percentage}%` }}
-                            />
-                        </div>
-                        <span className="text-xs text-foreground-tertiary">
-                            {bet.optionB.percentage}% · {bet.optionB.totalBets.toLocaleString()} SUI
-                        </span>
-                    </button>
-                </div>
+                        </button>
+                    </div>
                 )}
 
                 {/* Bet Amount Selection - Shows when an option is selected */}
