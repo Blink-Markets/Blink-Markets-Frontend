@@ -1,4 +1,5 @@
 // TypeScript types for on-chain contract data structures
+import { EventType } from '../lib/constants';
 
 // Event status enum matching the contract
 export enum EventStatus {
@@ -8,6 +9,9 @@ export enum EventStatus {
     RESOLVED = 3,
     CANCELLED = 4,
 }
+
+// Re-export EventType for convenience
+export { EventType };
 
 // On-chain PredictionEvent structure
 export interface PredictionEvent {
@@ -24,6 +28,11 @@ export interface PredictionEvent {
     winning_outcome: number | null;
     resolved_at: string | null;
     winning_pool_at_resolution: string | null;
+    // Crypto event fields
+    event_type: number; // EventType (0 = CRYPTO, 1 = MANUAL)
+    oracle_feed_id: number[] | null; // 32-byte feed ID for crypto events
+    target_price: string | null; // u128 as string (18 decimals)
+    oracle_price_at_resolution: string | null; // u128 as string
 }
 
 // Parsed event data for UI consumption
@@ -40,7 +49,15 @@ export interface ParsedEvent {
     resolvedAt: number | null;
     winningPoolAtResolution: bigint | null;
     totalPool: bigint;
+    // Crypto event fields
+    eventType: EventType;
+    oracleFeedId: string | null; // Hex string for feed ID
+    targetPrice: bigint | null;
+    oraclePriceAtResolution: bigint | null;
+    // Computed fields
+    isCryptoEvent: boolean;
 }
+
 
 // On-chain Position structure
 export interface Position {
@@ -162,7 +179,15 @@ const parseMoveString = (value: any): string => {
     return String(value);
 };
 
+// Helper to convert byte array to hex string
+const bytesToHex = (bytes: number[] | null): string | null => {
+    if (!bytes || bytes.length === 0) return null;
+    return '0x' + bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 export const parseEvent = (eventJson: any): ParsedEvent => {
+    const eventType = Number(eventJson.event_type ?? EventType.MANUAL);
+
     return {
         id: eventJson.id?.id || eventJson.id,
         marketId: eventJson.market_id,
@@ -183,8 +208,17 @@ export const parseEvent = (eventJson: any): ParsedEvent => {
             (sum: bigint, pool: string) => sum + BigInt(pool),
             0n
         ),
+        // Crypto event fields
+        eventType: eventType as EventType,
+        oracleFeedId: bytesToHex(eventJson.oracle_feed_id),
+        targetPrice: eventJson.target_price ? BigInt(eventJson.target_price) : null,
+        oraclePriceAtResolution: eventJson.oracle_price_at_resolution
+            ? BigInt(eventJson.oracle_price_at_resolution)
+            : null,
+        isCryptoEvent: eventType === EventType.CRYPTO,
     };
 };
+
 
 export const parsePosition = (positionJson: any): ParsedPosition => {
     return {
