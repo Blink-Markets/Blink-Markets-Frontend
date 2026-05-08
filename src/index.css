@@ -1,73 +1,74 @@
 @import "tailwindcss";
 
 @theme {
-  /* Sui-inspired Dark Blue Color Palette */
-  --color-background: #050B15;
-  --color-background-secondary: #0A1628;
-  --color-background-tertiary: #0F1F38;
-  --color-foreground: #FFFFFF;
-  --color-foreground-secondary: #A3B8D5;
-  --color-foreground-tertiary: #6B7C95;
+  /* Dark Bet Market — Neon Exchange Palette */
+  --color-background: oklch(13% 0.02 270);
+  --color-background-secondary: oklch(16% 0.02 270);
+  --color-background-tertiary: oklch(20% 0.02 270);
+  --color-foreground: oklch(93% 0.01 270);
+  --color-foreground-secondary: oklch(78% 0.01 270);
+  --color-foreground-tertiary: oklch(55% 0.02 270);
 
-  --color-card: #0D1B2A;
-  --color-card-foreground: #FFFFFF;
-  --color-card-hover: #122640;
+  --color-card: oklch(16% 0.02 270);
+  --color-card-foreground: oklch(93% 0.01 270);
+  --color-card-hover: oklch(20% 0.03 270);
 
-  --color-popover: #0A1628;
-  --color-popover-foreground: #FFFFFF;
+  --color-popover: oklch(16% 0.02 270);
+  --color-popover-foreground: oklch(93% 0.01 270);
 
-  /* Sui Cyan/Blue Primary */
-  --color-primary: #4DA2FF;
-  --color-primary-hover: #6BB3FF;
-  --color-primary-foreground: #050B15;
+  /* Neon Cyan — The One Vibrant Voice */
+  --color-primary: oklch(72% 0.19 195);
+  --color-primary-hover: oklch(65% 0.22 195);
+  --color-primary-foreground: oklch(10% 0.02 270);
 
-  /* Sui Accent Cyan */
-  --color-accent: #00D4FF;
-  --color-accent-foreground: #050B15;
+  /* Accent — same cyan, used sparingly */
+  --color-accent: oklch(72% 0.19 195);
+  --color-accent-foreground: oklch(10% 0.02 270);
 
-  --color-secondary: #1A2D45;
-  --color-secondary-foreground: #FFFFFF;
+  --color-secondary: oklch(22% 0.02 270);
+  --color-secondary-foreground: oklch(93% 0.01 270);
 
-  --color-muted: #162235;
-  --color-muted-foreground: #6B7C95;
+  --color-muted: oklch(20% 0.02 270);
+  --color-muted-foreground: oklch(55% 0.02 270);
 
-  --color-destructive: #FF4D6A;
+  --color-destructive: oklch(62% 0.22 25);
 
-  /* Semantic betting colors - Sui style */
-  --color-success: #00E5A0;
-  --color-success-bg: rgba(0, 229, 160, 0.12);
-  --color-warning: #FFB84D;
-  --color-warning-bg: rgba(255, 184, 77, 0.12);
-  --color-danger: #FF4D6A;
-  --color-danger-bg: rgba(255, 77, 106, 0.12);
-  --color-info: #4DA2FF;
-  --color-info-bg: rgba(77, 162, 255, 0.12);
+  /* Semantic betting colors — adapted to dark exchange */
+  --color-success: oklch(72% 0.19 155);
+  --color-success-bg: oklch(72% 0.19 155 / 0.15);
+  --color-warning: oklch(75% 0.16 85);
+  --color-warning-bg: oklch(75% 0.16 85 / 0.15);
+  --color-danger: oklch(62% 0.22 25);
+  --color-danger-bg: oklch(62% 0.22 25 / 0.15);
+  --color-info: oklch(72% 0.19 195);
+  --color-info-bg: oklch(72% 0.19 195 / 0.15);
 
-  /* Sui Gradient accents */
-  --color-gradient-start: #4DA2FF;
-  --color-gradient-mid: #00D4FF;
-  --color-gradient-end: #00E5A0;
+  /* Gradient — subtle neon glow */
+  --color-gradient-start: oklch(72% 0.19 195);
+  --color-gradient-mid: oklch(60% 0.22 270);
+  --color-gradient-end: oklch(72% 0.19 195);
 
-  /* Option colors - Sui themed */
-  --color-option-a: #00E5A0;
-  --color-option-a-bg: rgba(0, 229, 160, 0.15);
-  --color-option-b: #FFB84D;
-  --color-option-b-bg: rgba(255, 184, 77, 0.15);
+  /* Option colors — dark exchange adapted */
+  --color-option-a: oklch(72% 0.19 155);
+  --color-option-a-bg: oklch(72% 0.19 155 / 0.15);
+  --color-option-b: oklch(75% 0.16 85);
+  --color-option-b-bg: oklch(75% 0.16 85 / 0.15);
 
-  --color-border: rgba(77, 162, 255, 0.12);
-  --color-border-hover: rgba(77, 162, 255, 0.25);
-  --color-input: #0D1B2A;
-  --color-ring: #4DA2FF;
+  --color-border: oklch(25% 0.03 270);
+  --color-border-hover: oklch(72% 0.19 195 / 0.4);
+  --color-input: oklch(18% 0.02 270);
+  --color-ring: oklch(72% 0.19 195);
 
-  --radius-2xl: 1.5rem;
-  --radius-xl: 1rem;
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
-  --radius-sm: 0.375rem;
+  /* Impeccable spacing — editorial scale, no 4px step */
+  --radius-2xl: 16px;
+  --radius-xl: 12px;
+  --radius-lg: 8px;
+  --radius-md: 4px;
+  --radius-sm: 2px;
 
-  /* Sui-style Animations */
-  --animate-pulse-soft: pulse-soft 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  --animate-pulse-fast: pulse-fast 0.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  /* Impeccable Animations — expo-out signature */
+  --animate-pulse-soft: pulse-soft 2.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  --animate-pulse-fast: pulse-fast 0.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   --animate-shimmer: shimmer 2.5s linear infinite;
   --animate-slide-up: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-slide-down: slide-down 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -79,25 +80,21 @@
   --animate-countdown-tick: countdown-tick 1s ease-in-out infinite;
 
   @keyframes pulse-soft {
-
     0%,
     100% {
       opacity: 1;
     }
-
     50% {
       opacity: 0.7;
     }
   }
 
   @keyframes pulse-fast {
-
     0%,
     100% {
       opacity: 1;
       transform: scale(1);
     }
-
     50% {
       opacity: 0.8;
       transform: scale(1.02);
@@ -108,7 +105,6 @@
     0% {
       background-position: -200% 0;
     }
-
     100% {
       background-position: 200% 0;
     }
@@ -119,7 +115,6 @@
       opacity: 0;
       transform: translateY(20px);
     }
-
     to {
       opacity: 1;
       transform: translateY(0);
@@ -131,7 +126,6 @@
       opacity: 0;
       transform: translateY(-12px);
     }
-
     to {
       opacity: 1;
       transform: translateY(0);
@@ -143,7 +137,6 @@
       opacity: 0;
       transform: scale(0.92);
     }
-
     to {
       opacity: 1;
       transform: scale(1);
@@ -151,114 +144,80 @@
   }
 
   @keyframes shake {
-
     0%,
     100% {
       transform: translateX(0);
     }
-
     20% {
       transform: translateX(-4px);
     }
-
     40% {
       transform: translateX(4px);
     }
-
     60% {
       transform: translateX(-4px);
     }
-
     80% {
       transform: translateX(4px);
     }
   }
 
   @keyframes glow {
-
     0%,
     100% {
-      filter: drop-shadow(0 0 12px rgba(77, 162, 255, 0.4));
+      filter: drop-shadow(0 0 8px oklch(72% 0.19 195 / 0.3));
     }
-
     50% {
-      filter: drop-shadow(0 0 24px rgba(77, 162, 255, 0.7));
+      filter: drop-shadow(0 0 20px oklch(72% 0.19 195 / 0.6));
     }
   }
 
   @keyframes float {
-
     0%,
     100% {
-      transform: translateY(0px) rotate(0deg);
+      transform: translateY(0px);
     }
-
-    25% {
-      transform: translateY(-12px) rotate(1deg);
-    }
-
     50% {
-      transform: translateY(-6px) rotate(0deg);
-    }
-
-    75% {
-      transform: translateY(-18px) rotate(-1deg);
+      transform: translateY(-8px);
     }
   }
 
   @keyframes wave {
-
     0%,
     100% {
       transform: translateX(0) translateY(0) scale(1);
     }
-
-    25% {
-      transform: translateX(5px) translateY(-8px) scale(1.02);
-    }
-
     50% {
-      transform: translateX(-5px) translateY(4px) scale(0.98);
-    }
-
-    75% {
-      transform: translateX(8px) translateY(-4px) scale(1.01);
+      transform: translateX(-3px) translateY(3px) scale(0.99);
     }
   }
 
   @keyframes countdown-tick {
-
     0%,
     100% {
       transform: scale(1);
     }
-
     10% {
       transform: scale(1.12);
     }
-
     30% {
       transform: scale(1);
     }
   }
 
   @keyframes blob {
-
     0%,
     100% {
       transform: translate(0, 0) scale(1);
     }
-
     25% {
-      transform: translate(30px, -50px) scale(1.1);
+      transform: translate(15px, -25px) scale(1.05);
     }
-
     50% {
-      transform: translate(-20px, 20px) scale(0.9);
+      transform: translate(-10px, 10px) scale(0.95);
     }
-
     75% {
-      transform: translate(20px, 50px) scale(1.05);
+      transform: translate(10px, 25px) scale(1.02);
     }
   }
 
@@ -267,7 +226,6 @@
       transform: scale(0.8);
       opacity: 0.6;
     }
-
     100% {
       transform: scale(2.4);
       opacity: 0;
@@ -281,148 +239,145 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: clip;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
-/* Typography */
+/* Typography — Dark Exchange voice */
 .font-display {
-  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-family: "Cormorant Garamond", Georgia, serif;
 }
 
-/* Scrollbar - Sui style */
+.font-mono {
+  font-family: "Space Grotesk", monospace;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: oklch(93% 0.01 270);
+}
+
+a {
+  color: oklch(72% 0.19 195);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition:
+    color 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    text-decoration-color 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+a:hover {
+  color: oklch(65% 0.22 195);
+  text-decoration-thickness: 2px;
+}
+
+strong {
+  font-weight: 600;
+  color: oklch(93% 0.01 270);
+}
+
+::selection {
+  background: oklch(72% 0.19 195 / 0.3);
+  color: oklch(98% 0 0);
+}
+
+/* Scrollbar — dark exchange */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: oklch(13% 0.02 270);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
-  border-radius: 10px;
+  background: oklch(30% 0.03 270);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
+  background: oklch(72% 0.19 195);
 }
 
-/* Sui Gradient text utility */
-.gradient-text {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent), var(--color-gradient-end));
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Grain overlay — subtle dark noise */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
 }
 
-.gradient-text-animated {
-  background: linear-gradient(90deg,
-      var(--color-primary),
-      var(--color-accent),
-      var(--color-gradient-end),
-      var(--color-accent),
-      var(--color-primary));
-  background-size: 400% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradient-flow 4s ease infinite;
-}
-
-@keyframes gradient-flow {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  50% {
-    background-position: 100% 50%;
-  }
-
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-/* Sui Glass effect */
-.glass {
-  background: rgba(13, 27, 42, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(77, 162, 255, 0.08);
-}
-
-.glass-darker {
-  background: rgba(5, 11, 21, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(77, 162, 255, 0.1);
-}
-
-/* Sui Shimmer loading effect */
-.shimmer {
-  background: linear-gradient(90deg,
-      var(--color-secondary) 0%,
-      rgba(77, 162, 255, 0.1) 50%,
-      var(--color-secondary) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-/* Sui Progress bar styling */
+/* Progress bar — dark exchange */
 .progress-track {
-  background: rgba(77, 162, 255, 0.08);
+  background: oklch(22% 0.03 270);
   border-radius: 9999px;
   overflow: hidden;
 }
 
 .progress-bar-a {
-  background: linear-gradient(90deg, #00E5A0, #00F5B8);
-  box-shadow: 0 0 12px rgba(0, 229, 160, 0.5);
+  background: oklch(72% 0.19 155);
+  box-shadow: 0 0 8px oklch(72% 0.19 155 / 0.3);
 }
 
 .progress-bar-b {
-  background: linear-gradient(90deg, #FFB84D, #FFC870);
-  box-shadow: 0 0 12px rgba(255, 184, 77, 0.5);
+  background: oklch(75% 0.16 85);
+  box-shadow: 0 0 8px oklch(75% 0.16 85 / 0.3);
 }
 
-/* Card hover effects - Sui style */
+/* Card hover — dark exchange with neon glow */
 .card-interactive {
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid oklch(25% 0.03 270);
 }
 
 .card-interactive:hover {
-  background-color: var(--color-card-hover);
-  border-color: rgba(77, 162, 255, 0.3);
-  transform: translateY(-4px);
+  border-color: oklch(72% 0.19 195 / 0.4);
+  transform: translateY(-2px);
   box-shadow:
-    0 12px 40px rgba(77, 162, 255, 0.1),
-    0 0 0 1px rgba(77, 162, 255, 0.1);
+    0 4px 24px -4px oklch(72% 0.19 195 / 0.15),
+    0 0 1px oklch(72% 0.19 195 / 0.3);
 }
 
-/* Sui Outcome button states */
+/* Outcome button states — dark with neon accents */
 .outcome-btn {
   position: relative;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
 
 .outcome-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   opacity: 0;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 .outcome-btn:hover::before {
@@ -430,264 +385,135 @@ body {
 }
 
 .outcome-btn-a::before {
-  background: linear-gradient(135deg, rgba(0, 229, 160, 0.08), transparent);
+  background: oklch(72% 0.19 155 / 0.08);
 }
 
 .outcome-btn-b::before {
-  background: linear-gradient(135deg, rgba(255, 184, 77, 0.08), transparent);
+  background: oklch(75% 0.16 85 / 0.08);
 }
 
 .outcome-btn-a.selected {
-  background: var(--color-option-a-bg);
-  border-color: var(--color-option-a);
-  box-shadow:
-    0 0 32px rgba(0, 229, 160, 0.25),
-    inset 0 0 20px rgba(0, 229, 160, 0.05);
+  background: oklch(72% 0.19 155 / 0.15);
+  border-color: oklch(72% 0.19 155);
+  box-shadow: 0 0 12px oklch(72% 0.19 155 / 0.2);
 }
 
 .outcome-btn-b.selected {
-  background: var(--color-option-b-bg);
-  border-color: var(--color-option-b);
-  box-shadow:
-    0 0 32px rgba(255, 184, 77, 0.25),
-    inset 0 0 20px rgba(255, 184, 77, 0.05);
+  background: oklch(75% 0.16 85 / 0.15);
+  border-color: oklch(75% 0.16 85);
+  box-shadow: 0 0 12px oklch(75% 0.16 85 / 0.2);
 }
 
 /* Countdown states */
 .countdown-normal {
-  color: var(--color-success);
+  color: oklch(72% 0.19 155);
 }
 
 .countdown-warning {
-  color: var(--color-warning);
+  color: oklch(75% 0.16 85);
   animation: pulse-soft 1s ease-in-out infinite;
 }
 
 .countdown-critical {
-  color: var(--color-danger);
+  color: oklch(62% 0.22 25);
   animation: pulse-fast 0.5s ease-in-out infinite;
 }
 
-/* Sui Live indicator */
+/* Live indicator — neon pulse */
 .live-dot {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--color-success);
-  box-shadow:
-    0 0 8px var(--color-success),
-    0 0 16px var(--color-success),
-    0 0 24px rgba(0, 229, 160, 0.3);
+  background: oklch(72% 0.19 155);
+  box-shadow: 0 0 8px oklch(72% 0.19 155 / 0.6);
   animation: pulse-soft 1.5s ease-in-out infinite;
 }
 
-/* Sui Stat card */
+/* Stat card — dark with neon top border */
 .stat-card {
-  background: linear-gradient(135deg, rgba(13, 27, 42, 0.9) 0%, rgba(15, 31, 56, 0.8) 100%);
-  border: 1px solid rgba(77, 162, 255, 0.1);
+  background: oklch(16% 0.02 270);
+  border: 1px solid oklch(25% 0.03 270);
   position: relative;
   overflow: hidden;
 }
 
 .stat-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-accent), transparent);
-  opacity: 0.5;
+  height: 2px;
+  background: oklch(72% 0.19 195);
+  opacity: 0.6;
 }
 
-/* Category pill - Sui style */
+/* Category pill — dark exchange */
 .category-pill {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-}
-
-.category-pill::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(77, 162, 255, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-.category-pill:hover::before {
-  opacity: 1;
 }
 
 .category-pill:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(77, 162, 255, 0.15);
+  background: oklch(22% 0.03 270);
+  transform: translateY(-1px);
 }
 
 .category-pill.active {
-  box-shadow:
-    0 8px 24px rgba(77, 162, 255, 0.25),
-    0 0 0 1px rgba(77, 162, 255, 0.3);
+  background: oklch(72% 0.19 195);
+  color: oklch(10% 0.02 270);
+  border-color: oklch(72% 0.19 195);
+  box-shadow: 0 0 12px oklch(72% 0.19 195 / 0.3);
 }
 
-/* Sui Betting action button */
+/* Bet button — sharp, exchange CTA */
 .bet-button {
   position: relative;
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
-.bet-button::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent);
-  transition: left 0.5s ease;
-}
-
-.bet-button:hover::before {
-  left: 100%;
+.bet-button:hover {
+  transform: translateY(-2px);
 }
 
 .bet-button:active {
   transform: scale(0.98);
 }
 
-/* Tooltip */
+/* Tooltip — dark exchange */
 .tooltip {
-  background: var(--color-popover);
-  border: 1px solid rgba(77, 162, 255, 0.15);
-  box-shadow:
-    0 16px 48px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(77, 162, 255, 0.1);
+  background: oklch(20% 0.03 270);
+  border: 1px solid oklch(30% 0.03 270);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  color: oklch(93% 0.01 270);
+  font-size: 0.6875rem;
+  border-radius: 4px;
 }
 
-/* Sui Floating Background Elements */
-.sui-bg-glow {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.sui-bg-glow-1 {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(77, 162, 255, 0.3), transparent 70%);
-  top: -200px;
-  right: -200px;
-  animation: blob 20s ease-in-out infinite;
-}
-
-.sui-bg-glow-2 {
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(0, 212, 255, 0.25), transparent 70%);
-  bottom: -150px;
-  left: -150px;
-  animation: blob 25s ease-in-out infinite reverse;
-}
-
-.sui-bg-glow-3 {
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(0, 229, 160, 0.2), transparent 70%);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  animation: blob 30s ease-in-out infinite;
-}
-
-/* Sui Wave Pattern */
-.sui-wave-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.sui-wave {
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
-  background:
-    linear-gradient(180deg, transparent 0%, rgba(77, 162, 255, 0.02) 50%, transparent 100%);
-  animation: wave 8s ease-in-out infinite;
-}
-
-/* Sui Grid Pattern Overlay */
-.sui-grid-pattern {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(77, 162, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(77, 162, 255, 0.03) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse 80% 50% at 50% 0%, black 70%, transparent 100%);
-  pointer-events: none;
-}
-
-/* Sui Button Ripple Effect */
-.ripple-container {
-  position: relative;
-  overflow: hidden;
-}
-
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(77, 162, 255, 0.4);
-  animation: ripple 0.6s ease-out;
-  pointer-events: none;
-}
-
-/* Sui Glow Border */
-.glow-border {
-  position: relative;
-}
-
-.glow-border::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent), var(--color-gradient-end));
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.glow-border:hover::after {
-  opacity: 0.5;
-  filter: blur(8px);
-}
-
-/* Sui Hero Specific Styles */
+/* Hero title — italic serif display */
 .hero-title {
-  font-size: clamp(3rem, 8vw, 5rem);
-  font-weight: 800;
-  line-height: 1.1;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1;
   letter-spacing: -0.02em;
 }
 
 .hero-subtitle {
+  font-family: "Instrument Sans", system-ui, sans-serif;
   font-size: clamp(1.125rem, 2.5vw, 1.5rem);
   line-height: 1.6;
+  color: oklch(78% 0.01 270);
 }
 
-/* Sui Card Entrance Animation */
+/* Card entrance — subtle, dark exchange */
 .card-entrance {
   animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
@@ -696,97 +522,144 @@ body {
 .card-entrance:nth-child(1) {
   animation-delay: 0.05s;
 }
-
 .card-entrance:nth-child(2) {
   animation-delay: 0.1s;
 }
-
 .card-entrance:nth-child(3) {
   animation-delay: 0.15s;
 }
-
 .card-entrance:nth-child(4) {
   animation-delay: 0.2s;
 }
-
 .card-entrance:nth-child(5) {
   animation-delay: 0.25s;
 }
-
 .card-entrance:nth-child(6) {
   animation-delay: 0.3s;
 }
 
-/* Sui Feature Pill */
+/* Feature pill — dark with neon border */
 .feature-pill {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.feature-pill::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(77, 162, 255, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid oklch(25% 0.03 270);
+  background: oklch(16% 0.02 270);
 }
 
 .feature-pill:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 32px rgba(77, 162, 255, 0.2);
+  border-color: oklch(72% 0.19 195 / 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px oklch(72% 0.19 195 / 0.1);
 }
 
-.feature-pill:hover::before {
-  opacity: 1;
+/* Section divider — hairline */
+.section-divider {
+  border-top: 1px solid oklch(25% 0.03 270);
 }
 
-/* Sui Noise Texture Overlay (subtle) */
-.noise-overlay {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+/* Micro label — uppercase, tracked */
+.micro-label {
+  font-family: "Space Grotesk", monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: oklch(55% 0.02 270);
 }
 
-/* Sui Animated Border Gradient */
-@property --angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
+/* Accent label — neon cyan */
+.accent-label {
+  font-family: "Space Grotesk", monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: oklch(72% 0.19 195);
 }
 
-.animated-border {
-  --angle: 0deg;
-  border: 2px solid transparent;
-  background:
-    linear-gradient(var(--color-card), var(--color-card)) padding-box,
-    conic-gradient(from var(--angle), var(--color-primary), var(--color-accent), var(--color-gradient-end), var(--color-primary)) border-box;
-  animation: rotate-border 4s linear infinite;
+/* Primary CTA — sharp, dark exchange */
+.btn-primary-editorial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 48px;
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: oklch(10% 0.02 270);
+  background: oklch(72% 0.19 195);
+  border: none;
+  border-radius: 0;
+  cursor: pointer;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    background 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-@keyframes rotate-border {
-  to {
-    --angle: 360deg;
+.btn-primary-editorial:hover {
+  transform: translateY(-2px);
+  background: oklch(65% 0.22 195);
+  color: oklch(10% 0.02 270);
+  box-shadow: 0 0 20px oklch(72% 0.19 195 / 0.4);
+}
+
+.btn-primary-editorial:focus-visible {
+  outline: 2px solid oklch(72% 0.19 195);
+  outline-offset: 2px;
+}
+
+/* Secondary CTA — inline text link */
+.btn-secondary-editorial {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: oklch(93% 0.01 270);
+  text-decoration: none;
+  border-bottom: 1px solid oklch(72% 0.19 195);
+  padding-bottom: 2px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.btn-secondary-editorial:hover {
+  color: oklch(72% 0.19 195);
+  border-color: oklch(72% 0.19 195);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-}
 
-/* Sui Stats Counter Animation */
-@keyframes count-up {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
+  .card-entrance {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
-.count-up {
-  animation: count-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Visually hidden */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

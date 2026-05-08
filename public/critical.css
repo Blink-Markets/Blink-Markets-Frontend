@@ -1,0 +1,38 @@
+/* Critical CSS for initial load — dark bet market */
+:root {
+  --blink-dark-bg: #0e0e1a;
+  --blink-dark-ink: #e8e8f0;
+  --blink-dark-accent: #00d4aa;
+}
+
+html {
+  background-color: var(--blink-dark-bg);
+}
+
+body {
+  margin: 0;
+  background-color: var(--blink-dark-bg);
+  font-family: "Instrument Sans", system-ui, sans-serif;
+  color: var(--blink-dark-ink);
+}
+
+/* Loading animation — dark exchange spinner */
+#root:empty::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border: 2px solid oklch(25% 0.03 270);
+  border-top-color: var(--blink-dark-accent);
+  border-radius: 50%;
+  animation: impeccable-spinner 0.8s linear infinite;
+}
+
+@keyframes impeccable-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}

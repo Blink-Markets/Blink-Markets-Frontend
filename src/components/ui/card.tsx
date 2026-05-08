@@ -10,9 +10,14 @@ function Card({
     <div
       ref={ref}
       className={cn(
-        "rounded-xl border bg-card text-card-foreground shadow",
+        "border bg-[oklch(16%_0.02_270)] text-[oklch(93%_0.01_270)]",
         className,
       )}
+      style={{
+        borderRadius: "4px",
+        boxShadow: "none",
+        ...props.style,
+      }}
       {...props}
     />
   );
@@ -42,7 +47,11 @@ function CardTitle({
   return (
     <h3
       ref={ref}
-      className={cn("font-semibold leading-none tracking-tight", className)}
+      className={cn(
+        "font-display font-medium leading-none tracking-tight",
+        className,
+      )}
+      style={{ color: "oklch(93% 0.01 270)", ...props.style }}
       {...props}
     />
   );
@@ -58,7 +67,8 @@ function CardDescription({
   return (
     <p
       ref={ref}
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-sm", className)}
+      style={{ color: "oklch(55% 0.02 270)", lineHeight: 1.6, ...props.style }}
       {...props}
     />
   );

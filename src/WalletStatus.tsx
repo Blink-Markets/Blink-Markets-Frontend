@@ -17,7 +17,10 @@ export function WalletStatus() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Wallet className="h-5 w-5" />
+            <Wallet
+              className="h-5 w-5"
+              style={{ color: "oklch(72% 0.19 195)" }}
+            />
             Wallet Status
           </CardTitle>
           <CardDescription>
@@ -29,13 +32,22 @@ export function WalletStatus() {
         <CardContent>
           {account ? (
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="font-mono text-sm break-all">
+              <CheckCircle2
+                className="h-4 w-4"
+                style={{ color: "oklch(72% 0.19 155)" }}
+              />
+              <span
+                className="text-sm break-all"
+                style={{
+                  fontFamily: '"Space Grotesk", monospace',
+                  color: "oklch(78% 0.01 270)",
+                }}
+              >
                 {account.address}
               </span>
             </div>
           ) : (
-            <p className="text-muted-foreground">
+            <p style={{ color: "oklch(55% 0.02 270)" }}>
               Click the connect button above to link your Sui wallet.
             </p>
           )}
