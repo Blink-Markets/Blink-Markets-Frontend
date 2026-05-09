@@ -78,7 +78,7 @@ export function RecentBets({ bets }: RecentBetsProps) {
                   borderRadius: "2px",
                   background: "oklch(72% 0.19 195)",
                   color: "oklch(10% 0.02 270)",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: '"JetBrains Mono", monospace',
                 }}
               >
                 <Sparkles size={10} />
@@ -157,7 +157,7 @@ export function RecentBets({ bets }: RecentBetsProps) {
                   className="ml-auto text-xs font-bold"
                   style={{
                     color: "oklch(72% 0.19 155)",
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                   }}
                 >
                   {winnerOption?.odds.toFixed(2)}x

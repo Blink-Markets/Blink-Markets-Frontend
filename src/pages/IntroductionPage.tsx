@@ -121,34 +121,36 @@ export function IntroductionPage() {
               transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            {/* Hero Title — italic serif display, the dark exchange signature */}
+            {/* Hero Title — bold geometric display, the betting exchange signature */}
             <h1
               className="font-display mb-8"
-              style={{ fontWeight: 300, lineHeight: 1 }}
+              style={{ fontWeight: 800, lineHeight: 1.05 }}
             >
-              {/* First line — smaller, italic serif */}
+              {/* First line — smaller, uppercase tracked */}
               <span
                 className="block mb-2"
                 style={{
                   fontSize: "clamp(1.125rem, 2.5vw, 1.75rem)",
-                  fontWeight: 400,
-                  fontStyle: "italic",
+                  fontWeight: 500,
+                  fontStyle: "normal",
                   color: "oklch(78% 0.01 270)",
                   lineHeight: 1.3,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
                 }}
               >
                 Flash betting
               </span>
-              {/* Second line — large italic serif */}
+              {/* Second line — large bold display */}
               <span
                 className="block"
                 style={{
                   fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
-                  fontWeight: 300,
-                  fontStyle: "italic",
+                  fontWeight: 800,
+                  fontStyle: "normal",
                   color: "oklch(93% 0.01 270)",
-                  lineHeight: 1,
-                  letterSpacing: "-0.02em",
+                  lineHeight: 1.05,
+                  letterSpacing: "-0.03em",
                 }}
               >
                 in 10 seconds
@@ -225,7 +227,7 @@ export function IntroductionPage() {
                 className="text-xs uppercase"
                 style={{
                   letterSpacing: "0.2em",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: '"JetBrains Mono", monospace',
                 }}
               >
                 Learn More
@@ -258,9 +260,10 @@ export function IntroductionPage() {
               className="font-display mb-4"
               style={{
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-                fontWeight: 400,
+                fontWeight: 700,
                 lineHeight: 1.2,
                 color: "oklch(93% 0.01 270)",
+                letterSpacing: "-0.02em",
               }}
             >
               How It Works
@@ -314,13 +317,13 @@ export function IntroductionPage() {
                   e.currentTarget.style.boxShadow = "none";
                 }}
               >
-                {/* Step number — display font, italic */}
+                {/* Step number — display font, bold */}
                 <div
                   className="font-display mb-4"
                   style={{
                     fontSize: "2.5rem",
-                    fontWeight: 300,
-                    fontStyle: "italic",
+                    fontWeight: 700,
+                    fontStyle: "normal",
                     color: item.accentColor,
                     lineHeight: 1,
                     letterSpacing: "-0.02em",
@@ -356,10 +359,11 @@ export function IntroductionPage() {
               className="font-display mb-5"
               style={{
                 fontSize: "clamp(1.75rem, 4vw, 2.5rem)",
-                fontWeight: 300,
-                fontStyle: "italic",
+                fontWeight: 700,
+                fontStyle: "normal",
                 color: "oklch(93% 0.01 270)",
                 lineHeight: 1.2,
+                letterSpacing: "-0.02em",
               }}
             >
               Ready to make your first flash bet?

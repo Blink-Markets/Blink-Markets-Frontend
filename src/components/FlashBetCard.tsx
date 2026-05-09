@@ -133,7 +133,7 @@ export function FlashBetCard({
                 borderRadius: "2px",
                 background: `color-mix(in oklch, ${statusAccent} 12%, transparent)`,
                 color: statusAccent,
-                fontFamily: '"Space Grotesk", monospace',
+                fontFamily: '"JetBrains Mono", monospace',
                 letterSpacing: "0.05em",
               }}
             >
@@ -195,7 +195,7 @@ export function FlashBetCard({
                   color: "oklch(10% 0.02 270)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: '"JetBrains Mono", monospace',
                   fontSize: "0.75rem",
                 }}
               >
@@ -229,7 +229,7 @@ export function FlashBetCard({
                   color: "oklch(10% 0.02 270)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: '"JetBrains Mono", monospace',
                   fontSize: "0.75rem",
                 }}
               >
@@ -264,7 +264,7 @@ export function FlashBetCard({
                     color: "oklch(10% 0.02 270)",
                     letterSpacing: "0.05em",
                     textTransform: "uppercase",
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                     fontSize: "0.7rem",
                   }}
                 >
@@ -280,7 +280,7 @@ export function FlashBetCard({
                     color: "oklch(93% 0.01 270)",
                     letterSpacing: "0.05em",
                     textTransform: "uppercase",
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                     fontSize: "0.7rem",
                   }}
                 >
@@ -452,7 +452,7 @@ export function FlashBetCard({
                       betAmount === amount
                         ? "oklch(10% 0.02 270)"
                         : "oklch(65% 0.01 270)",
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                     letterSpacing: "0.05em",
                     cursor: "pointer",
                   }}
@@ -476,7 +476,7 @@ export function FlashBetCard({
                 color: "oklch(10% 0.02 270)",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
-                fontFamily: '"Space Grotesk", monospace',
+                fontFamily: '"JetBrains Mono", monospace',
                 fontSize: "0.8rem",
                 boxShadow: "none",
                 cursor: isConnected && !isPlacing ? "pointer" : "not-allowed",
@@ -528,7 +528,7 @@ export function FlashBetCard({
           <div
             className="font-semibold"
             style={{
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: '"JetBrains Mono", monospace',
               color: "oklch(93% 0.01 270)",
             }}
           >

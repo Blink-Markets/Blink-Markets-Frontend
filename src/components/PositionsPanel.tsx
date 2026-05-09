@@ -197,7 +197,7 @@ export function PositionsPanel() {
                       background: `color-mix(in oklch, ${statusColor} 12%, transparent)`,
                       color: statusColor,
                       borderColor: `color-mix(in oklch, ${statusColor} 30%, oklch(25% 0.03 270))`,
-                      fontFamily: '"Space Grotesk", monospace',
+                      fontFamily: '"JetBrains Mono", monospace',
                       letterSpacing: "0.05em",
                     }}
                   >
@@ -233,7 +233,7 @@ export function PositionsPanel() {
                 <p
                   className="font-semibold"
                   style={{
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                     color: "oklch(93% 0.01 270)",
                   }}
                 >
@@ -280,7 +280,7 @@ export function PositionsPanel() {
                       : "oklch(10% 0.02 270)",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: '"JetBrains Mono", monospace',
                   fontSize: "0.75rem",
                   boxShadow: "none",
                   cursor:

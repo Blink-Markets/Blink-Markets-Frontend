@@ -41,7 +41,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           borderRadius: "0px",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          fontFamily: '"Space Grotesk", monospace',
+          fontFamily: '"JetBrains Mono", monospace',
         }}
         {...props}
       />

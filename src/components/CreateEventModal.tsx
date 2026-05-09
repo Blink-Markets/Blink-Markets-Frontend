@@ -121,13 +121,13 @@ export const CreateEventModal = ({
     background: "oklch(20% 0.02 270)",
     border: "1px solid oklch(25% 0.03 270)",
     color: "oklch(93% 0.01 270)",
-    fontFamily: '"Instrument Sans", system-ui, sans-serif',
+    fontFamily: '"Inter", system-ui, sans-serif',
     outline: "none",
   };
 
   const labelStyle: React.CSSProperties = {
     color: "oklch(65% 0.01 270)",
-    fontFamily: '"Space Grotesk", monospace',
+    fontFamily: '"JetBrains Mono", monospace',
     fontSize: "0.7rem",
     letterSpacing: "0.1em",
     textTransform: "uppercase" as const,
@@ -319,7 +319,7 @@ export const CreateEventModal = ({
               color: "oklch(10% 0.02 270)",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: '"JetBrains Mono", monospace',
               fontSize: "0.75rem",
               cursor: isSubmitting || !account ? "not-allowed" : "pointer",
             }}

@@ -83,7 +83,7 @@ export function ZKLoginButton({
           background: "oklch(20% 0.02 270)",
           borderColor: "oklch(25% 0.03 270)",
           color: "oklch(55% 0.02 270)",
-          fontFamily: '"Space Grotesk", monospace',
+          fontFamily: '"JetBrains Mono", monospace',
           letterSpacing: "0.05em",
         }}
       >
@@ -128,7 +128,7 @@ export function ZKLoginButton({
           <span
             className="text-xs"
             style={{
-              fontFamily: '"Space Grotesk", monospace',
+              fontFamily: '"JetBrains Mono", monospace',
               letterSpacing: "0.05em",
             }}
           >
@@ -215,7 +215,7 @@ export function ZKLoginButton({
                   <span
                     className="flex-1 text-xs truncate"
                     style={{
-                      fontFamily: '"Space Grotesk", monospace',
+                      fontFamily: '"JetBrains Mono", monospace',
                       color: "oklch(65% 0.01 270)",
                     }}
                   >
@@ -310,7 +310,7 @@ export function ZKLoginButton({
           color: "oklch(10% 0.02 270)",
           letterSpacing: "0.1em",
           textTransform: "uppercase",
-          fontFamily: '"Space Grotesk", monospace',
+          fontFamily: '"JetBrains Mono", monospace',
           fontSize: "0.75rem",
         }}
       >
@@ -346,7 +346,7 @@ export function ZKLoginButton({
                 className="text-xs mb-3 px-2 uppercase"
                 style={{
                   color: "oklch(55% 0.02 270)",
-                  fontFamily: '"Space Grotesk", monospace',
+                  fontFamily: '"JetBrains Mono", monospace',
                   letterSpacing: "0.1em",
                   fontSize: "0.65rem",
                 }}
@@ -382,7 +382,7 @@ export function ZKLoginButton({
                     borderRadius: "2px",
                     background: "oklch(72% 0.19 195)",
                     color: "oklch(10% 0.02 270)",
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                     letterSpacing: "0.05em",
                   }}
                 >

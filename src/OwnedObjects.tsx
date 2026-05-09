@@ -72,7 +72,7 @@ export function OwnedObjects() {
                 <p
                   className="text-xs break-all"
                   style={{
-                    fontFamily: '"Space Grotesk", monospace',
+                    fontFamily: '"JetBrains Mono", monospace',
                     color: "oklch(78% 0.01 270)",
                   }}
                 >

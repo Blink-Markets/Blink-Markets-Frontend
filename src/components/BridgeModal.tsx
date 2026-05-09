@@ -83,7 +83,7 @@ export function BridgeModal({ isOpen, onClose }: BridgeModalProps) {
         },
       },
       typography: {
-        fontFamily: '"Instrument Sans", system-ui, sans-serif',
+        fontFamily: '"Inter", system-ui, sans-serif',
       },
     },
 
@@ -229,7 +229,7 @@ export function BridgeButton({ onClick, className }: BridgeButtonProps) {
         color: "oklch(78% 0.01 270)",
         letterSpacing: "0.05em",
         textTransform: "uppercase",
-        fontFamily: '"Space Grotesk", monospace',
+        fontFamily: '"JetBrains Mono", monospace',
         fontSize: "0.7rem",
         cursor: "pointer",
       }}
