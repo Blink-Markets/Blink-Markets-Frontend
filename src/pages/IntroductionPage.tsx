@@ -56,7 +56,7 @@ export function IntroductionPage() {
           <div className="flex items-center gap-3">
             <div className="relative group">
               <img
-                src="/logo1.png"
+                src="/logo2-transparent.png"
                 alt="Blink Market"
                 className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
               />
@@ -400,7 +400,7 @@ export function IntroductionPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
               <img
-                src="/logo1.png"
+                src="/logo1-transparent.png"
                 alt="Blink Market"
                 className="h-10 w-auto"
               />
