@@ -343,7 +343,7 @@ function App() {
           <div className="flex items-center gap-3">
             <Link to="/" className="relative group">
               <img
-                src="/logo.png"
+                src="/logo1.png"
                 alt="Blink Market"
                 className="h-10 w-auto transition-transform duration-300 group-hover:scale-105"
               />
@@ -714,7 +714,11 @@ function App() {
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <img src="/logo.png" alt="Blink Market" className="h-10 w-auto" />
+              <img
+                src="/logo1.png"
+                alt="Blink Market"
+                className="h-10 w-auto"
+              />
             </div>
 
             <p
