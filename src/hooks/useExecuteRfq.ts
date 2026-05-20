@@ -11,19 +11,19 @@ import {
     CLEARINGHOUSE_ID,
     COIN_TYPE,
     CLOCK_OBJECT_ID,
-    FUNCTIONS,
+    NEW_FUNCTIONS,
     computeUserTotalPay,
     getErrorMessage,
+    Side,
 } from "../lib/constants";
 import {
     TradeQuote,
-    ParsedPosition,
-    Side,
+    NewParsedPosition,
 } from "../types/contractTypes";
 
 interface UseExecuteRfqOptions {
     /** Optional callback when trade executes successfully */
-    onSuccess?: (position: ParsedPosition, positionId: string) => void;
+    onSuccess?: (position: NewParsedPosition, positionId: string) => void;
     /** Optional callback on error */
     onError?: (error: Error) => void;
 }
@@ -35,7 +35,7 @@ interface UseExecuteRfqReturn {
         quote: TradeQuote;
         /** Coin object ID to use for payment (must hold exactly user_total_pay) */
         coinObjectId: string;
-    }) => Promise<ParsedPosition | null>;
+    }) => Promise<NewParsedPosition | null>;
     /** Loading state */
     isLoading: boolean;
     /** Current error message */
@@ -67,7 +67,7 @@ export const useExecuteRfq = (
         async (params: {
             quote: TradeQuote;
             coinObjectId: string;
-        }): Promise<ParsedPosition | null> => {
+        }): Promise<NewParsedPosition | null> => {
             const { quote, coinObjectId } = params;
 
             // Validate configuration
@@ -139,7 +139,7 @@ export const useExecuteRfq = (
                 const tx = new Transaction();
 
                 tx.moveCall({
-                    target: FUNCTIONS.EXECUTE_RFQ(),
+                    target: NEW_FUNCTIONS.EXECUTE_RFQ(),
                     typeArguments: [COIN_TYPE],
                     arguments: [
                         tx.object(CLEARINGHOUSE_ID), // &mut Clearinghouse
@@ -173,8 +173,11 @@ export const useExecuteRfq = (
 
                     // Extract position ID from the transaction effects
                     // The transaction creates a new Position object
+                    const effects = 'effects' in result
+                        ? (result as any).effects
+                        : result as any;
                     positionId =
-                        result.effects?.created?.[0]?.reference?.objectId ?? "";
+                        effects?.created?.[0]?.reference?.objectId ?? "";
                 } catch (signError: any) {
                     // Fallback for wallets that support signTransaction but not signAndExecuteTransaction
                     if (
@@ -201,7 +204,7 @@ export const useExecuteRfq = (
                     }
                 }
 
-                const position: ParsedPosition = {
+                const position: NewParsedPosition = {
                     id: positionId,
                     marketId: quote.marketId,
                     side: quote.side as Side,

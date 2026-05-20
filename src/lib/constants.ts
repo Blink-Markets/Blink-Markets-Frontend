@@ -1,190 +1,217 @@
-// Contract configuration and constants for blink_market package
-// See contract-api-reference.md for full API documentation
+// Contract configuration and constants
 
 export const MIST_PER_SUI = 1_000_000_000n;
 
-// ============================================================================
-// Environment Configuration
-// ============================================================================
-// Set these in your .env file:
-//
-// VITE_BLINK_PACKAGE_ID - The blink_market package object ID
-// VITE_BLINK_CLEARINGHOUSE_ID - The shared Clearinghouse<CoinType> object ID
-// VITE_BLINK_COIN_TYPE - The coin type (e.g., "0x2::sui::SUI" or USDC)
-//
-
+// Contract addresses from environment variables
 export const PACKAGE_ID = import.meta.env.VITE_BLINK_PACKAGE_ID as string | undefined;
+export const MARKET_ID = import.meta.env.VITE_BLINK_MARKET_ID as string | undefined;
+export const TREASURY_ID = import.meta.env.VITE_BLINK_TREASURY_ID as string | undefined;
+export const EVENT_ID = import.meta.env.VITE_BLINK_EVENT_ID as string | undefined;
+
+// ============================================================================
+// NEW CONTRACT: blink_market package (RFQ-based binary markets)
+// ============================================================================
+// These are optional - set for the new blink_market contract support
 export const CLEARINGHOUSE_ID = import.meta.env.VITE_BLINK_CLEARINGHOUSE_ID as string | undefined;
 export const COIN_TYPE = import.meta.env.VITE_BLINK_COIN_TYPE as string | undefined;
+export const DEFAULT_PMM = import.meta.env.VITE_BLINK_PMM_ADDRESS as string | undefined;
 
-// Legacy export - use MARKET_ID or CLEARINGHOUSE_ID instead
-/** @deprecated Use CLEARINGHOUSE_ID or MARKET_ID instead */
-export const EVENT_ID = import.meta.env.VITE_BLINK_EVENT_ID as string | undefined;
-// Legacy export - use CLEARINGHOUSE_ID instead
-/** @deprecated Use CLEARINGHOUSE_ID instead */
-export const TREASURY_ID = import.meta.env.VITE_BLINK_TREASURY_ID as string | undefined;
-
-// Optional: Set specific market ID for single-market deployments
-// Otherwise markets are fetched/created dynamically
-export const MARKET_ID = import.meta.env.VITE_BLINK_MARKET_ID as string | undefined;
-
-// ============================================================================
-// Sui System Objects
-// ============================================================================
-
-export const CLOCK_OBJECT_ID = "0x6"; // Sui system clock
-
-// ============================================================================
-// Module Paths
-// ============================================================================
-
-const getModulePath = (module: string, func: string) => {
-    if (!PACKAGE_ID) throw new Error("PACKAGE_ID not configured");
-    return `${PACKAGE_ID}::${module}::${func}`;
-};
-
-export const MODULES = {
-    RFQ: "rfq",
-    MARKET: "market",
-    CLEARINGHOUSE: "clearinghouse",
-} as const;
-
-// ============================================================================
-// Function Targets (User-Facing)
-// ============================================================================
-
-export const FUNCTIONS = {
-    // RFQ - Place a trade (replaces old place_bet)
-    EXECUTE_RFQ: () => getModulePath(MODULES.RFQ, "execute_rfq"),
-
-    // Market - Redeem winnings (replaces old claim_winnings/claim_refund)
-    REDEEM_POSITION: () => getModulePath(MODULES.MARKET, "redeem_position"),
-} as const;
-
-// ============================================================================
-// Read/View Functions
-// ============================================================================
-
-export const VIEW_FUNCTIONS = {
-    // Market view functions
-    MARKET_IS_RESOLVED: () => getModulePath(MODULES.MARKET, "is_resolved"),
-    MARKET_WINNING_SIDE: () => getModulePath(MODULES.MARKET, "winning_side"),
-    MARKET_POOL_BALANCE: () => getModulePath(MODULES.MARKET, "pool_balance"),
-    MARKET_GET_ID: () => getModulePath(MODULES.MARKET, "get_market_id"),
-
-    // Position view functions
-    POSITION_SIDE: () => getModulePath(MODULES.MARKET, "position_side"),
-    POSITION_SIZE: () => getModulePath(MODULES.MARKET, "position_size"),
-    POSITION_MARKET_ID: () => getModulePath(MODULES.MARKET, "position_market_id"),
-
-    // Clearinghouse view functions - use with PMM address as parameter
-    CLEARINGHOUSE_GET_BALANCE: () => getModulePath(MODULES.CLEARINGHOUSE, "get_balance"),
-    CLEARINGHOUSE_TREASURY: () => getModulePath(MODULES.CLEARINGHOUSE, "get_treasury_balance"),
-    CLEARINGHOUSE_GET_LAST_SEQ: () => getModulePath(MODULES.CLEARINGHOUSE, "get_last_seq"),
-} as const;
-
-// ============================================================================
-// Configuration Check
-// ============================================================================
-
-export const isContractConfigured = (): boolean => {
-    return Boolean(PACKAGE_ID && CLEARINGHOUSE_ID && COIN_TYPE);
-};
-
-// ============================================================================
-// Constants
-// ============================================================================
-
+// Side constants for new binary markets (YES/NO)
 export const SIDE = {
     YES: 0,
     NO: 1,
 } as const;
+export type Side = 0 | 1;
 
-export type Side = (typeof SIDE)[keyof typeof SIDE];
+// New contract module paths
+export const NEW_MODULES = {
+    RFQ: 'rfq',
+    MARKET: 'market',
+    CLEARINGHOUSE: 'clearinghouse',
+} as const;
 
-// Basis points denominator
+// New contract function targets
+export const NEW_FUNCTIONS = {
+    EXECUTE_RFQ: () => getModulePath(NEW_MODULES.RFQ, 'execute_rfq'),
+    REDEEM_POSITION: () => getModulePath(NEW_MODULES.MARKET, 'redeem_position'),
+} as const;
+
+// Fee calculation for new contract
 export const BPS_DENOMINATOR = 10000n;
-
-// Platform fee: 0.10% (10 bps)
 export const PLATFORM_FEE_BPS = 10n;
+export const GAS_RESERVE_MIST = 50_000_000n;
 
-// Gas reserve for transactions
-export const GAS_RESERVE_MIST = 50_000_000n; // 0.05 SUI
+// Compute user_total_pay for execute_rfq: floor(size * priceBps / 10000) + fee
+export const computeUserTotalPay = (size: bigint, priceBps: bigint): bigint => {
+    const userBaseCost = (size * priceBps) / BPS_DENOMINATOR;
+    const platformFee = (userBaseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
+    return userBaseCost + platformFee;
+};
 
-// Default PMM address (configurable per deployment)
-export const DEFAULT_PMM = import.meta.env.VITE_BLINK_PMM_ADDRESS as string | undefined;
-
-// ============================================================================
-// Error Codes (from contract)
-// ============================================================================
-
-// Error codes are scoped by module to avoid collisions
-// rfq.move errors
-export const RFQ_ERROR_CODES = {
+// New contract error codes
+export const NEW_ERROR_CODES = {
     EQuoteExpired: 100,
     EInvalidSignature: 200,
     EInvalidUserAmount: 201,
     EPubkeyAddressMismatch: 202,
-} as const;
-
-// market.move errors
-export const MARKET_ERROR_CODES = {
     EMarketAlreadyResolved: 0,
     EMarketNotResolved: 1,
     EWrongSide: 2,
     EInsufficientPool: 3,
 } as const;
 
-// clearinghouse.move errors
-export const CLEARINGHOUSE_ERROR_CODES = {
-    EInsufficientPMMBalance: 0,
-    EInvalidSequenceNumber: 1,
+// Default coin type (SUI)
+export const DEFAULT_COIN_TYPE = '0x2::sui::SUI';
+
+// Sui system objects
+export const CLOCK_OBJECT_ID = '0x6';
+
+// Stork Oracle Configuration (for crypto events)
+export const STORK_STATE = import.meta.env.VITE_STORK_STATE as string | undefined;
+export const STORK_PACKAGE_ID = import.meta.env.VITE_STORK_PACKAGE_ID as string | undefined;
+
+// Stork Price Feed IDs (32-byte hex strings)
+export const STORK_FEED_IDS = {
+    BTCUSD: '0x7404e3d104ea7841c3d9e6fd20adfe99b4ad586bc08d8f3bd3afef894cf184de',
+    ETHUSD: '0x59102b37de83bdda9f38ac8254e596f0d9ac61d2035c07936675e87342817160',
+    SOLUSD: '0x1dcd89dfded9e8a9b0fa1745a8ebbacbb7c81e33d5abc81616633206d932e837',
+    SUIUSD: '0xa24cc95a4f3d70a0a2f7ac652b67a4a73791631ff06b4ee7f729097311169b81',
 } as const;
 
-// Combined ERROR_CODES for backward compatibility - use specific codes above
+// Human-readable feed names
+export const FEED_NAMES: Record<string, string> = {
+    [STORK_FEED_IDS.BTCUSD]: 'BTC/USD',
+    [STORK_FEED_IDS.ETHUSD]: 'ETH/USD',
+    [STORK_FEED_IDS.SOLUSD]: 'SOL/USD',
+    [STORK_FEED_IDS.SUIUSD]: 'SUI/USD',
+};
+
+// Event Types (matching contract)
+export enum EventType {
+    CRYPTO = 0,
+    MANUAL = 1,
+}
+
+// Contract module paths
+export const getModulePath = (module: string, func: string) => {
+    if (!PACKAGE_ID) throw new Error('PACKAGE_ID not configured');
+    return `${PACKAGE_ID}::${module}::${func}`;
+};
+
+// Module names
+export const MODULES = {
+    CONFIG: 'blink_config',
+    EVENT: 'blink_event',
+    POSITION: 'blink_position',
+} as const;
+
+// Function targets (with type arguments where needed)
+export const FUNCTIONS = {
+    // blink_position functions (all require CoinType)
+    PLACE_BET: () => getModulePath(MODULES.POSITION, 'place_bet'),
+    CANCEL_BET: () => getModulePath(MODULES.POSITION, 'cancel_bet'),
+    CLAIM_WINNINGS: () => getModulePath(MODULES.POSITION, 'claim_winnings'),
+    CLAIM_REFUND: () => getModulePath(MODULES.POSITION, 'claim_refund'),
+
+    // blink_event functions
+    CREATE_MANUAL_EVENT: () => getModulePath(MODULES.EVENT, 'create_manual_event'),
+    CREATE_CRYPTO_EVENT: () => getModulePath(MODULES.EVENT, 'create_crypto_event'),
+    OPEN_EVENT: () => getModulePath(MODULES.EVENT, 'open_event'),
+    LOCK_EVENT: () => getModulePath(MODULES.EVENT, 'lock_event'),
+    RESOLVE_MANUAL_EVENT: () => getModulePath(MODULES.EVENT, 'resolve_manual_event'),
+    RESOLVE_CRYPTO_EVENT: () => getModulePath(MODULES.EVENT, 'resolve_crypto_event'),
+    CANCEL_EVENT: () => getModulePath(MODULES.EVENT, 'cancel_event'),
+
+    // View functions
+    GET_ODDS: () => getModulePath(MODULES.EVENT, 'get_odds'),
+    GET_TOTAL_POOL: () => getModulePath(MODULES.EVENT, 'get_total_pool'),
+    CALCULATE_POTENTIAL_PAYOUT: () => getModulePath(MODULES.EVENT, 'calculate_potential_payout'),
+    IS_BETTING_OPEN: () => getModulePath(MODULES.EVENT, 'is_betting_open'),
+    GET_EVENT_TYPE: () => getModulePath(MODULES.EVENT, 'get_event_type'),
+    GET_ORACLE_FEED_ID: () => getModulePath(MODULES.EVENT, 'get_oracle_feed_id'),
+    GET_TARGET_PRICE: () => getModulePath(MODULES.EVENT, 'get_target_price'),
+    GET_ORACLE_PRICE_AT_RESOLUTION: () => getModulePath(MODULES.EVENT, 'get_oracle_price_at_resolution'),
+
+    // blink_config functions
+    GET_MARKET_MIN_STAKE: () => getModulePath(MODULES.CONFIG, 'get_market_min_stake'),
+    GET_MARKET_MAX_STAKE: () => getModulePath(MODULES.CONFIG, 'get_market_max_stake'),
+    GET_MARKET_FEE_BPS: () => getModulePath(MODULES.CONFIG, 'get_market_fee_bps'),
+    IS_MARKET_ACTIVE: () => getModulePath(MODULES.CONFIG, 'is_market_active'),
+    IS_ORACLE: () => getModulePath(MODULES.CONFIG, 'is_oracle'),
+    ADD_ORACLE: () => getModulePath(MODULES.CONFIG, 'add_oracle'),
+    CREATE_TREASURY: () => getModulePath(MODULES.CONFIG, 'create_treasury'),
+    WITHDRAW_FEES: () => getModulePath(MODULES.CONFIG, 'withdraw_fees'),
+} as const;
+
+// Check if contract is configured
+export const isContractConfigured = () => {
+    return Boolean(PACKAGE_ID && MARKET_ID && TREASURY_ID);
+};
+
+// Check if Stork Oracle is configured
+export const isStorkConfigured = () => {
+    return Boolean(STORK_STATE && STORK_PACKAGE_ID);
+};
+
+// Error codes from the contract
 export const ERROR_CODES = {
-    // rfq.move errors (100s)
-    EQuoteExpired: RFQ_ERROR_CODES.EQuoteExpired,
-    EInvalidSignature: RFQ_ERROR_CODES.EInvalidSignature,
-    EInvalidUserAmount: RFQ_ERROR_CODES.EInvalidUserAmount,
-    EPubkeyAddressMismatch: RFQ_ERROR_CODES.EPubkeyAddressMismatch,
+    // Authorization errors
+    ENotAuthorized: 0,
+    ENotOracle: 1,
 
-    // market.move errors (0, 1, 2, 3)
-    EMarketAlreadyResolved: MARKET_ERROR_CODES.EMarketAlreadyResolved,
-    EMarketNotResolved: MARKET_ERROR_CODES.EMarketNotResolved,
-    EWrongSide: MARKET_ERROR_CODES.EWrongSide,
-    EInsufficientPool: MARKET_ERROR_CODES.EInsufficientPool,
+    // State errors
+    EMarketNotActive: 100,
+    EEventNotOpen: 101,
+    EEventNotResolved: 103,
+    EEventNotCancelled: 104,
+    EPositionAlreadyClaimed: 105,
+    ENotWinningOutcome: 106,
+    EPositionNotAuthorized: 107,
 
-    // clearinghouse.move errors - using prefixed keys to avoid collision
-    EInsufficientPMMBalance: 1000, // distinct from market error
-    EInvalidSequenceNumber: 1001, // distinct from market error
+    // Validation errors
+    EInvalidOutcome: 200,
+    EStakeTooLow: 202,
+    EStakeTooHigh: 203,
+    ETooFewOutcomes: 205,
+    ETooManyOutcomes: 206,
+    EEventMismatch: 207,
+    ENotCryptoEvent: 208,
+    ENotManualEvent: 209,
+    EInvalidFeedId: 210,
+    ETargetPriceZero: 211,
+    ENegativeOraclePrice: 212,
+
+    // Timing errors
+    EBettingNotStarted: 300,
+    EBettingClosed: 301,
+    EEventAlreadyLocked: 302,
 } as const;
 
-// User-friendly error messages mapping
+// Error messages
 export const ERROR_MESSAGES: Record<number, string> = {
-    // rfq.move errors
-    [ERROR_CODES.EQuoteExpired]: "This quote has expired. Please request a new quote.",
-    [ERROR_CODES.EInvalidSignature]:
-        "Quote signature is invalid. Please contact support.",
-    [ERROR_CODES.EInvalidUserAmount]:
-        "Payment amount does not match the quoted price. Please refresh.",
-    [ERROR_CODES.EPubkeyAddressMismatch]:
-        "PMM key/address mismatch. Please contact support.",
-
-    // market.move errors
-    [ERROR_CODES.EMarketAlreadyResolved]:
-        "This market has already been resolved.",
-    [ERROR_CODES.EMarketNotResolved]: "This market has not been resolved yet.",
-    [ERROR_CODES.EWrongSide]:
-        "This position is on the losing side and cannot be redeemed.",
-    [ERROR_CODES.EInsufficientPool]:
-        "Insufficient pool balance. Please contact support.",
-
-    // clearinghouse.move errors
-    [ERROR_CODES.EInsufficientPMMBalance]:
-        "The market maker has insufficient balance. Please try again later.",
-    [ERROR_CODES.EInvalidSequenceNumber]:
-        "Quote sequence number is invalid. Please request a new quote.",
+    [ERROR_CODES.ENotAuthorized]: 'You are not authorized to perform this action',
+    [ERROR_CODES.ENotOracle]: 'Caller is not an authorized oracle',
+    [ERROR_CODES.EMarketNotActive]: 'This market is not active',
+    [ERROR_CODES.EEventNotOpen]: 'This event is not open for betting',
+    [ERROR_CODES.EEventNotResolved]: 'This event has not been resolved yet',
+    [ERROR_CODES.EEventNotCancelled]: 'This event was not cancelled',
+    [ERROR_CODES.EPositionAlreadyClaimed]: 'You have already claimed this position',
+    [ERROR_CODES.ENotWinningOutcome]: 'Your position is not on the winning outcome',
+    [ERROR_CODES.EPositionNotAuthorized]: "You don't own this position",
+    [ERROR_CODES.EInvalidOutcome]: 'Invalid outcome index',
+    [ERROR_CODES.EStakeTooLow]: 'Stake amount is below the minimum',
+    [ERROR_CODES.EStakeTooHigh]: 'Stake amount exceeds the maximum',
+    [ERROR_CODES.ETooFewOutcomes]: 'Event must have at least 2 outcomes',
+    [ERROR_CODES.ETooManyOutcomes]: 'Event cannot have more than 10 outcomes',
+    [ERROR_CODES.EEventMismatch]: 'Event/Market/Position ID mismatch',
+    [ERROR_CODES.ENotCryptoEvent]: 'This is not a crypto event',
+    [ERROR_CODES.ENotManualEvent]: 'This is not a manual event',
+    [ERROR_CODES.EInvalidFeedId]: 'Feed ID must be 32 bytes',
+    [ERROR_CODES.ETargetPriceZero]: 'Target price cannot be zero',
+    [ERROR_CODES.ENegativeOraclePrice]: 'Oracle returned a negative price',
+    [ERROR_CODES.EBettingNotStarted]: 'Betting window has not started yet',
+    [ERROR_CODES.EBettingClosed]: 'Betting window has closed',
+    [ERROR_CODES.EEventAlreadyLocked]: 'Cannot cancel bet after event is locked',
 };
 
 // Get user-friendly error message from error code
@@ -192,66 +219,29 @@ export const getErrorMessage = (errorCode: number): string => {
     return ERROR_MESSAGES[errorCode] || `Unknown error (code: ${errorCode})`;
 };
 
-// ============================================================================
-// Fee Calculation
-// ============================================================================
-
-/**
- * Computes the total amount user must pay for a trade.
- *
- * Formula:
- *   user_base_cost = floor(size × price_bps / 10000)
- *   platform_fee   = floor(user_base_cost × 10 / 10000)  // 0.10%
- *   user_total_pay = user_base_cost + platform_fee
- *
- * @param size - Total notional in base units (e.g., USDC cents)
- * @param priceBps - PMM's quoted probability in basis points (0-10000)
- * @returns Total amount user must pay in base units
- */
-export const computeUserTotalPay = (size: bigint, priceBps: bigint): bigint => {
-    const userBaseCost = (size * priceBps) / BPS_DENOMINATOR;
-    const platformFee = (userBaseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
-    return userBaseCost + platformFee;
+// Parse error code from transaction error string
+export const parseErrorCode = (errorString: string): number | null => {
+    const match = errorString.match(/MoveAbort.*?(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
 };
 
-/**
- * Computes only the platform fee portion.
- */
-export const computePlatformFee = (size: bigint, priceBps: bigint): bigint => {
-    const userBaseCost = (size * priceBps) / BPS_DENOMINATOR;
-    return (userBaseCost * PLATFORM_FEE_BPS) / BPS_DENOMINATOR;
+// Price formatting utilities for crypto events (Stork uses 18 decimals)
+export const formatPriceForContract = (humanPrice: number): string => {
+    const scaled = BigInt(Math.floor(humanPrice * 1e18));
+    return scaled.toString();
 };
 
-/**
- * Computes the base cost without platform fee.
- */
-export const computeBaseCost = (size: bigint, priceBps: bigint): bigint => {
-    return (size * priceBps) / BPS_DENOMINATOR;
+export const formatPriceFromContract = (contractPrice: string | bigint): number => {
+    const scaled = typeof contractPrice === 'string' ? BigInt(contractPrice) : contractPrice;
+    return Number(scaled) / 1e18;
 };
 
-// ============================================================================
-// Legacy / Deprecated Exports (for backward compatibility during migration)
-// ============================================================================
-
-// Legacy event status enum (for old contract compatibility)
-export enum EventStatus {
-    CREATED = 0,
-    OPEN = 1,
-    LOCKED = 2,
-    RESOLVED = 3,
-    CANCELLED = 4,
-}
-
-// Legacy error codes (old contract)
-export const LEGACY_ERROR_CODES = {
-    ENotAuthorized: 0,
-    EMarketNotActive: 100,
-    EEventNotOpen: 101,
-    EEventNotResolved: 103,
-    EEventNotCancelled: 104,
-    EPositionAlreadyClaimed: 105,
-    ENotWinningOutcome: 106,
-    EInvalidOutcome: 200,
-    EStakeTooLow: 202,
-    EStakeTooHigh: 203,
-} as const;
+// Convert feed ID hex string to bytes array for contract calls
+export const feedIdToBytes = (feedId: string): number[] => {
+    const hex = feedId.startsWith('0x') ? feedId.slice(2) : feedId;
+    const bytes: number[] = [];
+    for (let i = 0; i < hex.length; i += 2) {
+        bytes.push(parseInt(hex.substr(i, 2), 16));
+    }
+    return bytes;
+};

@@ -1,217 +1,7 @@
-// TypeScript types for blink_market on-chain data structures
-// Matches the contract-api-reference.md specification
+// TypeScript types for on-chain contract data structures
+import { EventType } from '../lib/constants';
 
-// ============================================================================
-// Core Enums
-// ============================================================================
-
-export const SIDE = {
-    YES: 0 as const,
-    NO: 1 as const,
-};
-
-export type Side = 0 | 1;
-
-// ============================================================================
-// On-Chain Object Types (raw from Sui RPC)
-// ============================================================================
-
-// Raw Position object as returned by Sui RPC (fields of a Move struct)
-export interface RawPosition {
-    id: { id: string };
-    market_id: string; // ID of the Market object
-    side: number;      // 0 = YES, 1 = NO
-    size: string;      // u64 as string — total notional / payout amount
-}
-
-// Raw Market object fields from Sui RPC
-export interface RawMarket {
-    id: { id: string };
-    is_resolved: boolean;
-    winning_side: number; // 0 = YES, 1 = NO; only valid if is_resolved
-    pool: {
-        fields: { value: string }; // Balance<CoinType>
-    };
-    event_id: number[]; // vector<u8> — off-chain event identifier
-}
-
-// Raw Clearinghouse account entry
-export interface RawClearinghouseAccount {
-    balance: string; // u64 as string
-    last_seq: string; // u64 as string — last accepted PMM sequence number
-}
-
-// ============================================================================
-// Parsed Types (for UI consumption)
-// ============================================================================
-
-// Position object owned by a user's wallet
-export interface ParsedPosition {
-    id: string;
-    marketId: string;
-    side: Side;
-    size: bigint; // Payout amount in base units
-
-    // Legacy fields for backward compatibility during migration
-    // @deprecated - new contract uses marketId/side/size only
-    eventId?: string;
-    isClaimed?: boolean;
-    outcomeIndex?: number;
-    stakeAmount?: bigint;
-}
-
-// Market state
-export interface ParsedMarket {
-    id: string;
-    isResolved: boolean;
-    winningSide: Side | null; // null if not yet resolved
-    poolBalance: bigint;      // Current collateral in base units
-    eventId: string;          // Decoded off-chain event identifier
-}
-
-// Clearinghouse state for a specific PMM
-export interface ParsedClearinghouseAccount {
-    balance: bigint;
-    lastSeq: bigint;
-}
-
-// ============================================================================
-// PMM Quote Types
-// ============================================================================
-
-// Quote returned by the PMM backend — all fields passed directly to execute_rfq
-export interface TradeQuote {
-    marketId: string;       // Market<CoinType> object ID
-    side: Side;             // 0 = YES, 1 = NO
-    priceBps: bigint;       // PMM quoted probability in bps (e.g., 6000 = 60%)
-    size: bigint;           // Total notional in base units
-    seqNumber: bigint;      // Monotonic nonce from PMM
-    expiresAt: bigint;      // Unix timestamp in milliseconds
-    pmm: string;            // PMM's Sui address
-    pmmPubkey: Uint8Array;  // PMM's Ed25519 public key (32 bytes)
-    signature: Uint8Array;  // Ed25519 signature over canonical message (64 bytes)
-}
-
-// Parameters required to execute a trade on-chain
-export interface ExecuteRfqParams {
-    quote: TradeQuote;
-    clearinghouseId: string;
-    coinObjectId: string;  // Must hold exactly user_total_pay
-    coinType: string;      // e.g., "0x2::sui::SUI"
-    packageId: string;
-}
-
-// Parameters for redeeming a winning position
-export interface RedeemPositionParams {
-    marketId: string;
-    positionId: string;
-    coinType: string;
-    packageId: string;
-}
-
-// ============================================================================
-// On-Chain Events (from Sui event subscriptions)
-// ============================================================================
-
-export interface TradeExecutedEvent {
-    market_id: string;
-    position_id: string;  // Object ID of the minted Position
-    side: number;          // 0 = YES, 1 = NO
-    size: string;          // Total notional in base units (u64 as string)
-    price_bps: string;     // Quoted probability in basis points
-    user: string;          // User's Sui address
-    pmm: string;           // PMM's Sui address
-    seq_number: string;    // PMM's sequence number for this trade
-}
-
-export interface PositionRedeemedEvent {
-    market_id: string;
-    position_id: string;
-    size: string;  // Payout amount in base units
-    user: string;
-}
-
-export interface MarketCreatedEvent {
-    market_id: string;
-    event_id: number[]; // Off-chain event identifier bytes
-}
-
-export interface MarketResolvedEvent {
-    market_id: string;
-    winning_side: number; // 0 = YES, 1 = NO
-}
-
-export interface DepositEvent {
-    pmm: string;
-    amount: string;
-}
-
-export interface WithdrawEvent {
-    pmm: string;
-    amount: string;
-}
-
-// ============================================================================
-// UI Helper Types
-// ============================================================================
-
-// Position enriched with market context for display
-export interface PositionWithMarket {
-    position: ParsedPosition;
-    market: ParsedMarket | null;
-    canRedeem: boolean;       // true if market is resolved and position is on winning side
-    payout: bigint | null;    // equals position.size if redeemable, null otherwise
-}
-
-// ============================================================================
-// Parsers
-// ============================================================================
-
-export const parsePosition = (raw: any): ParsedPosition => ({
-    id: raw.id?.id ?? raw.id,
-    marketId: raw.market_id,
-    side: Number(raw.side) as Side,
-    size: BigInt(raw.size),
-});
-
-export const parseMarket = (raw: any): ParsedMarket => ({
-    id: raw.id?.id ?? raw.id,
-    isResolved: Boolean(raw.is_resolved),
-    winningSide: raw.is_resolved ? (Number(raw.winning_side) as Side) : null,
-    poolBalance: BigInt(raw.pool?.fields?.value ?? raw.pool_balance ?? 0),
-    eventId: Array.isArray(raw.event_id)
-        ? Buffer.from(raw.event_id).toString("utf8")
-        : String(raw.event_id ?? ""),
-});
-
-export const parseClearinghouseAccount = (raw: any): ParsedClearinghouseAccount => ({
-    balance: BigInt(raw.balance ?? 0),
-    lastSeq: BigInt(raw.last_seq ?? 0),
-});
-
-// ============================================================================
-// Trade Helpers
-// ============================================================================
-
-// Determines if a position can be redeemed given market state
-export const canRedeemPosition = (
-    position: ParsedPosition,
-    market: ParsedMarket,
-): boolean => {
-    if (!market.isResolved) return false;
-    if (market.winningSide === null) return false;
-    return position.side === market.winningSide;
-};
-
-// Side label helper
-export const sideLabel = (side: Side): "YES" | "NO" =>
-    side === SIDE.YES ? "YES" : "NO";
-
-// ============================================================================
-// Legacy Types (deprecated — kept for backward compatibility during migration)
-// ============================================================================
-
-// @deprecated Use ParsedMarket.isResolved / winningSide instead
+// Event status enum matching the contract
 export enum EventStatus {
     CREATED = 0,
     OPEN = 1,
@@ -220,7 +10,32 @@ export enum EventStatus {
     CANCELLED = 4,
 }
 
-// @deprecated Use ParsedMarket instead
+// Re-export EventType for convenience
+export { EventType };
+
+// On-chain PredictionEvent structure
+export interface PredictionEvent {
+    id: {
+        id: string;
+    };
+    market_id: string;
+    description: string;
+    outcome_labels: string[][]; // vector<vector<u8>>
+    outcome_pools: string[]; // Balance<SUI> objects (as strings)
+    betting_start_time: string;
+    betting_end_time: string;
+    status: number; // EventStatus
+    winning_outcome: number | null;
+    resolved_at: string | null;
+    winning_pool_at_resolution: string | null;
+    // Crypto event fields
+    event_type: number; // EventType (0 = CRYPTO, 1 = MANUAL)
+    oracle_feed_id: number[] | null; // 32-byte feed ID for crypto events
+    target_price: string | null; // u128 as string (18 decimals)
+    oracle_price_at_resolution: string | null; // u128 as string
+}
+
+// Parsed event data for UI consumption
 export interface ParsedEvent {
     id: string;
     marketId: string;
@@ -229,41 +44,304 @@ export interface ParsedEvent {
     outcomePools: bigint[];
     bettingStartTime: number;
     bettingEndTime: number;
-    status: number;
+    status: EventStatus;
     winningOutcome: number | null;
     resolvedAt: number | null;
     winningPoolAtResolution: bigint | null;
     totalPool: bigint;
+    // Crypto event fields
+    eventType: EventType;
+    oracleFeedId: string | null; // Hex string for feed ID
+    targetPrice: bigint | null;
+    oraclePriceAtResolution: bigint | null;
+    // Computed fields
+    isCryptoEvent: boolean;
 }
 
-// @deprecated — old contract used outcome_index; new contract uses side (0/1)
+
+// On-chain Position structure
+export interface Position {
+    id: {
+        id: string;
+    };
+    event_id: string;
+    outcome_index: number;
+    stake_amount: string; // u64 as string
+    is_claimed: boolean;
+    owner: string;
+}
+
+// Parsed position data for UI consumption
+export interface ParsedPosition {
+    id: string;
+    eventId: string;
+    outcomeIndex: number;
+    stakeAmount: bigint;
+    isClaimed: boolean;
+    owner: string;
+}
+
+// On-chain Market structure
+export interface Market {
+    id: {
+        id: string;
+    };
+    name: string;
+    description: string;
+    min_stake: string;
+    max_stake: string;
+    platform_fee_bps: string;
+    is_active: boolean;
+    oracles: string[]; // vector<address>
+}
+
+// Parsed market data
+export interface ParsedMarket {
+    id: string;
+    name: string;
+    description: string;
+    minStake: bigint;
+    maxStake: bigint;
+    platformFeeBps: number;
+    isActive: boolean;
+    oracles: string[];
+}
+
+// On-chain Treasury structure
+export interface Treasury {
+    id: {
+        id: string;
+    };
+    balance: string; // Balance<SUI>
+    total_fees_collected: string;
+}
+
+// Event subscription types
+export interface BetPlacedEvent {
+    event_id: string;
+    position_id: string;
+    outcome_index: number;
+    stake_amount: string;
+    bettor: string;
+}
+
+export interface EventResolvedEvent {
+    event_id: string;
+    winning_outcome: number;
+    total_pool: string;
+}
+
+export interface WinningsClaimedEvent {
+    event_id: string;
+    position_id: string;
+    payout_amount: string;
+    claimer: string;
+}
+
+export interface RefundClaimedEvent {
+    event_id: string;
+    position_id: string;
+    refund_amount: string;
+    claimer: string;
+}
+
+export interface BetCancelledEvent {
+    event_id: string;
+    position_id: string;
+    refund_amount: string;
+    fee_amount: string;
+}
+
+// Helper type for position with event context
 export interface PositionWithEvent {
     position: ParsedPosition;
     event: ParsedEvent | null;
     canClaim: boolean;
-    claimType: "winnings" | "refund" | null;
+    claimType: 'winnings' | 'refund' | null;
     potentialPayout: bigint | null;
 }
 
-// @deprecated Use canRedeemPosition instead
+// Utility functions for type conversion
+const parseMoveString = (value: any): string => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+
+    // Handle Move String struct: { fields: { bytes: number[] } }
+    if (value.fields?.bytes) {
+        return String.fromCharCode(...value.fields.bytes);
+    }
+
+    // Handle raw vector<u8>: number[]
+    if (Array.isArray(value)) {
+        return String.fromCharCode(...value);
+    }
+
+    return String(value);
+};
+
+// Helper to convert byte array to hex string
+const bytesToHex = (bytes: number[] | null): string | null => {
+    if (!bytes || bytes.length === 0) return null;
+    return '0x' + bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+export const parseEvent = (eventJson: any): ParsedEvent => {
+    const eventType = Number(eventJson.event_type ?? EventType.MANUAL);
+
+    return {
+        id: eventJson.id?.id || eventJson.id,
+        marketId: eventJson.market_id,
+        description: parseMoveString(eventJson.description),
+        outcomeLabels: (eventJson.outcome_labels || []).map((label: any) =>
+            parseMoveString(label)
+        ),
+        outcomePools: (eventJson.outcome_pools || []).map((pool: string) => BigInt(pool)),
+        bettingStartTime: Number(eventJson.betting_start_time),
+        bettingEndTime: Number(eventJson.betting_end_time),
+        status: Number(eventJson.status),
+        winningOutcome: eventJson.winning_outcome !== null ? Number(eventJson.winning_outcome) : null,
+        resolvedAt: eventJson.resolved_at ? Number(eventJson.resolved_at) : null,
+        winningPoolAtResolution: eventJson.winning_pool_at_resolution
+            ? BigInt(eventJson.winning_pool_at_resolution)
+            : null,
+        totalPool: (eventJson.outcome_pools || []).reduce(
+            (sum: bigint, pool: string) => sum + BigInt(pool),
+            0n
+        ),
+        // Crypto event fields
+        eventType: eventType as EventType,
+        oracleFeedId: bytesToHex(eventJson.oracle_feed_id),
+        targetPrice: eventJson.target_price ? BigInt(eventJson.target_price) : null,
+        oraclePriceAtResolution: eventJson.oracle_price_at_resolution
+            ? BigInt(eventJson.oracle_price_at_resolution)
+            : null,
+        isCryptoEvent: eventType === EventType.CRYPTO,
+    };
+};
+
+
+export const parsePosition = (positionJson: any): ParsedPosition => {
+    return {
+        id: positionJson.id?.id || positionJson.id,
+        eventId: positionJson.event_id,
+        outcomeIndex: Number(positionJson.outcome_index),
+        stakeAmount: BigInt(positionJson.stake_amount),
+        isClaimed: Boolean(positionJson.is_claimed),
+        owner: positionJson.owner,
+    };
+};
+
+export const parseMarket = (marketJson: any): ParsedMarket => {
+    return {
+        id: marketJson.id?.id || marketJson.id,
+        name: marketJson.name,
+        description: marketJson.description,
+        minStake: BigInt(marketJson.min_stake),
+        maxStake: BigInt(marketJson.max_stake),
+        platformFeeBps: Number(marketJson.platform_fee_bps),
+        isActive: Boolean(marketJson.is_active),
+        oracles: marketJson.oracles || [],
+    };
+};
+
+// Calculate potential payout for a position
 export const calculatePayout = (
-    _position: ParsedPosition,
-    _event: ParsedEvent,
-): bigint | null => null;
+    position: ParsedPosition,
+    event: ParsedEvent
+): bigint | null => {
+    if (event.status !== EventStatus.RESOLVED) return null;
+    if (event.winningOutcome === null) return null;
+    if (position.outcomeIndex !== event.winningOutcome) return null;
+    if (event.winningPoolAtResolution === null || event.winningPoolAtResolution === 0n) return null;
 
-// @deprecated Use parseMarket from the new contract
-export const parseEvent = (raw: any): ParsedEvent => ({
-    id: raw.id?.id ?? raw.id,
-    marketId: raw.market_id ?? "",
-    description: raw.description ?? "",
-    outcomeLabels: raw.outcome_labels ?? [],
-    outcomePools: [],
-    bettingStartTime: Number(raw.betting_start_time ?? 0),
-    bettingEndTime: Number(raw.betting_end_time ?? 0),
-    status: Number(raw.status ?? 0),
-    winningOutcome: raw.winning_outcome != null ? Number(raw.winning_outcome) : null,
-    resolvedAt: raw.resolved_at ? Number(raw.resolved_at) : null,
-    winningPoolAtResolution: null,
-    totalPool: 0n,
-});
+    // Payout = (user_stake / winning_pool) * total_pool
+    const userStake = position.stakeAmount;
+    const winningPool = event.winningPoolAtResolution;
+    const totalPool = event.totalPool;
 
+    // Use u128 arithmetic to prevent overflow
+    const payout = (userStake * totalPool) / winningPool;
+    return payout;
+};
+
+// ============================================================================
+// NEW CONTRACT: blink_market (RFQ-based binary markets)
+// ============================================================================
+
+// Side type for new binary markets (YES/NO)
+export const NEW_SIDE = {
+    YES: 0 as const,
+    NO: 1 as const,
+};
+export type NewSide = 0 | 1;
+
+// Quote returned by PMM backend for execute_rfq
+export interface TradeQuote {
+    marketId: string;
+    side: NewSide;
+    priceBps: bigint;
+    size: bigint;
+    seqNumber: bigint;
+    expiresAt: bigint;
+    pmm: string;
+    pmmPubkey: Uint8Array; // 32 bytes
+    signature: Uint8Array; // 64 bytes
+}
+
+// New Position type (for blink_market)
+export interface NewParsedPosition {
+    id: string;
+    marketId: string;
+    side: NewSide;
+    size: bigint; // Total notional/payout amount
+}
+
+// New Market type (for blink_market)
+export interface NewParsedMarket {
+    id: string;
+    isResolved: boolean;
+    winningSide: NewSide | null;
+    poolBalance: bigint;
+    eventId: string;
+}
+
+// Position with market context for new contract
+export interface PositionWithMarket {
+    position: NewParsedPosition;
+    market: NewParsedMarket | null;
+    canRedeem: boolean;
+    payout: bigint | null;
+}
+
+// Helper to determine if position can be redeemed
+export const canRedeemPosition = (
+    position: NewParsedPosition,
+    market: NewParsedMarket,
+): boolean => {
+    if (!market.isResolved) return false;
+    if (market.winningSide === null) return false;
+    return position.side === market.winningSide;
+};
+
+// Side label helper
+export const sideLabel = (side: NewSide): 'YES' | 'NO' =>
+    side === NEW_SIDE.YES ? 'YES' : 'NO';
+
+// On-chain events for new contract
+export interface TradeExecutedEvent {
+    market_id: string;
+    position_id: string;
+    side: number;
+    size: string;
+    price_bps: string;
+    user: string;
+    pmm: string;
+    seq_number: string;
+}
+
+export interface PositionRedeemedEvent {
+    market_id: string;
+    position_id: string;
+    size: string;
+    user: string;
+}
